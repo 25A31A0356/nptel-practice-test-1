@@ -117,12 +117,12 @@ class ContestDatabase {
     const initialToken = crypto.randomBytes(4).toString("hex").toUpperCase();
     return {
       config: {
-        contest_id: "NPTEL-PRACTICE-TEST-1",
-        title: "NPTEL - METAL ADDITIVE MANUFACTURING",
+        contest_id: "NPTEL-PRACTICE-TEST-2",
+        title: "NPTEL - METAL ADDITIVE MANUFACTURING PRACTICE TEST 2",
         institution: "NPTEL",
         department: "NATIONAL PROGRAMME ON TECHNOLOGY ENHANCED LEARNING",
         event_name: "METAL ADDITIVE MANUFACTURING",
-        competition_name: "METAL ADDITIVE MANUFACTURING PRACTICE TEST",
+        competition_name: "METAL ADDITIVE MANUFACTURING PRACTICE TEST 2",
         venue: "ONLINE EXAMINATION PORTAL",
         date: "OCTOBER 2026",
         time_window: "OFFICIAL EXAM WINDOW",
@@ -166,15 +166,17 @@ class ContestDatabase {
         const parsed = JSON.parse(raw) as DatabaseSchema;
         parsed.questions = MASTER_QUESTION_POOL;
         if (parsed.config) {
-          parsed.config.title = "NPTEL - METAL ADDITIVE MANUFACTURING";
+          parsed.config.contest_id = "NPTEL-PRACTICE-TEST-2";
+          parsed.config.title = "NPTEL - METAL ADDITIVE MANUFACTURING PRACTICE TEST 2";
           parsed.config.institution = "NPTEL";
           parsed.config.department = "NATIONAL PROGRAMME ON TECHNOLOGY ENHANCED LEARNING";
           parsed.config.event_name = "METAL ADDITIVE MANUFACTURING";
-          parsed.config.competition_name = "METAL ADDITIVE MANUFACTURING PRACTICE TEST";
+          parsed.config.competition_name = "METAL ADDITIVE MANUFACTURING PRACTICE TEST 2";
           parsed.config.venue = "ONLINE EXAMINATION PORTAL";
           parsed.config.duration_minutes = 60; // 60-Minute Official Timer
           parsed.config.hint_penalty_points = 0;
         }
+        this.saveDatabase(parsed);
         return parsed;
       }
     } catch (e) {
@@ -247,6 +249,33 @@ class ContestDatabase {
       this.data.audit_logs.length = 1000;
     }
     this.saveDatabase();
+  }
+
+  public getAuditLogs(): AuditLog[] {
+    return [...this.data.audit_logs];
+  }
+
+  public clearAllAuditLogs(): { success: boolean; message: string } {
+    this.data.audit_logs = [
+      {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        event_type: "CONTEST_STATUS_CHANGED",
+        details: "All previous audit event logs cleared by Event Host."
+      }
+    ];
+    this.saveDatabase();
+    return { success: true, message: "Audit logs successfully cleared." };
+  }
+
+  public deleteAuditLog(logId: string): { success: boolean; message: string } {
+    const initialLen = this.data.audit_logs.length;
+    this.data.audit_logs = this.data.audit_logs.filter((l) => l.id !== logId);
+    if (this.data.audit_logs.length < initialLen) {
+      this.saveDatabase();
+      return { success: true, message: "Audit log entry deleted successfully." };
+    }
+    return { success: false, message: "Audit log entry not found." };
   }
 
   public getConfig(): ContestConfig {
@@ -425,8 +454,8 @@ class ContestDatabase {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    // Select exactly 40 questions for candidate
-    return shuffled.slice(0, 40);
+    // Select questions for candidate
+    return shuffled.slice(0, Math.min(shuffled.length, 40));
   }
 
   // --- Candidate Attempt Engine ---
@@ -468,11 +497,11 @@ class ContestDatabase {
         };
         this.data.registrations[roll] = reg;
         this.saveDatabase();
-        this.logAudit("REGISTRATION", `Candidate ${roll} (${reg.student_name}) registered for NPTEL Practice Test 1.`, roll);
+        this.logAudit("REGISTRATION", `Candidate ${roll} (${reg.student_name}) registered for NPTEL Practice Test 2.`, roll);
       } else {
         return {
           can_start: false,
-          reason: "ACCESS DENIED: Roll Number not found in the official exam list.\nOnly designated candidates registered in the roster are permitted to take NPTEL Practice Test 1."
+          reason: "ACCESS DENIED: Roll Number not found in the official exam list.\nOnly designated candidates registered in the roster are permitted to take NPTEL Practice Test 2."
         };
       }
     } else if (matched && !reg) {
@@ -489,7 +518,7 @@ class ContestDatabase {
       };
       this.data.registrations[roll] = reg;
       this.saveDatabase();
-      this.logAudit("REGISTRATION", `Official candidate ${roll} (${reg.student_name}) registered for NPTEL Practice Test 1.`, roll);
+      this.logAudit("REGISTRATION", `Official candidate ${roll} (${reg.student_name}) registered for NPTEL Practice Test 2.`, roll);
     }
 
     // 4. Check existing attempt
@@ -743,7 +772,7 @@ class ContestDatabase {
 
   public logContestantEvent(
     attempt_id: string,
-    event_type: "TAB_SWITCH" | "BACK_NAVIGATION" | "WINDOW_BLUR" | "FULLSCREEN_EXIT" | "AI_SIDEBAR_DETECTED",
+    event_type: "TAB_SWITCH" | "BACK_NAVIGATION" | "WINDOW_BLUR" | "FULLSCREEN_EXIT" | "AI_SIDEBAR_DETECTED" | "NETWORK_OFFLINE" | "NETWORK_RECONNECT" | "NETWORK_WARNING",
     details: string
   ): {
     success: boolean;
@@ -756,29 +785,46 @@ class ContestDatabase {
       return { success: false, terminated: true, reason: "Attempt is no longer active." };
     }
 
-    if (
-      event_type === "TAB_SWITCH" ||
-      event_type === "WINDOW_BLUR" ||
-      event_type === "FULLSCREEN_EXIT" ||
-      event_type === "AI_SIDEBAR_DETECTED"
-    ) {
-      attempt.tab_switch_count += 1;
-      const tag = event_type === "WINDOW_BLUR" || event_type === "AI_SIDEBAR_DETECTED"
-        ? "AI_SIDEBAR_BLUR"
-        : event_type === "FULLSCREEN_EXIT"
-        ? "FULLSCREEN_EXIT"
-        : "TAB_SWITCH";
+    // NETWORK SAFEGUARD: Network instability, disconnection, or reconnection MUST NEVER ban or disqualify the student!
+    const isNetworkIssue =
+      event_type === "NETWORK_OFFLINE" ||
+      event_type === "NETWORK_RECONNECT" ||
+      event_type === "NETWORK_WARNING" ||
+      /network|offline|disconnect|reconnect|wifi|cellular|connection|internet/i.test(details || "");
 
-      this.logAudit(tag, `Candidate window/focus violation #${attempt.tab_switch_count} (${event_type}): ${details}`, attempt.roll_number, attempt_id);
+    if (isNetworkIssue) {
+      this.logAudit("NETWORK_WARNING", `Candidate network status noted (${event_type}): ${details} - Protected from penalty/disqualification.`, attempt.roll_number, attempt_id);
+      this.saveDatabase();
+      return { success: true, terminated: false, switch_count: attempt.tab_switch_count };
+    }
+
+    // FOCUS LOSS / WINDOW BLUR SAFEGUARD:
+    // Blurred focus happens during OS alerts, Wi-Fi dialogs, notifications, keyboard pops.
+    // Window blur is logged as informational audit, but NEVER strikes or bans the candidate.
+    if (event_type === "WINDOW_BLUR" || event_type === "AI_SIDEBAR_DETECTED") {
+      this.logAudit("AI_SIDEBAR_BLUR", `Focus shift / background blur detected for ${attempt.roll_number}: ${details} (Non-disqualifying notice).`, attempt.roll_number, attempt_id);
+      this.saveDatabase();
+      return { success: true, terminated: false, switch_count: attempt.tab_switch_count };
+    }
+
+    if (event_type === "FULLSCREEN_EXIT") {
+      this.logAudit("FULLSCREEN_EXIT", `Candidate exited fullscreen mode: ${details}`, attempt.roll_number, attempt_id);
+      this.saveDatabase();
+      return { success: true, terminated: false, switch_count: attempt.tab_switch_count };
+    }
+
+    if (event_type === "TAB_SWITCH") {
+      attempt.tab_switch_count += 1;
+      this.logAudit("TAB_SWITCH", `Candidate switched browser tab (Warning #${attempt.tab_switch_count}): ${details}`, attempt.roll_number, attempt_id);
 
       const maxChances = this.data.config.max_tab_switches || 3;
       if (attempt.tab_switch_count > maxChances) {
-        this.finalizeAttempt(attempt_id, "DISQUALIFIED", `Exceeded allowed ${maxChances} security violation chances (${attempt.tab_switch_count} infractions).`);
-        this.logAudit("CHEATING_DISQUALIFIED", `Candidate ${attempt.roll_number} DISQUALIFIED after exceeding ${maxChances} warning chances (AI sidebar / focus loss / tab switch).`, attempt.roll_number, attempt_id);
+        this.finalizeAttempt(attempt_id, "DISQUALIFIED", `Exceeded allowed ${maxChances} deliberate tab switch strikes (${attempt.tab_switch_count} violations).`);
+        this.logAudit("CHEATING_DISQUALIFIED", `Candidate ${attempt.roll_number} DISQUALIFIED after exceeding ${maxChances} deliberate tab switch strikes.`, attempt.roll_number, attempt_id);
         return {
           success: true,
           terminated: true,
-          reason: `EXAMINATION DISQUALIFIED\nYour exam session was terminated because you exceeded your 3 allowed warning chances.\nSecurity violation logged to Invigilator Audit Trail.`,
+          reason: `EXAMINATION DISQUALIFIED\nYour exam session was terminated because you exceeded your 3 allowed tab-switch warnings.\nDeliberate tab-switching away from the exam tab is strictly prohibited.`,
           switch_count: attempt.tab_switch_count
         };
       }
@@ -1085,6 +1131,13 @@ class ContestDatabase {
     this.data.roll_to_latest_attempt = {};
     this.data.attempt_history = [];
     this.data.config.results_released = false;
+    this.data.config.allow_registration = false;
+    const validRolls = new Set(OFFICIAL_STUDENT_ROSTER.map((s) => s.roll.toUpperCase()));
+    for (const roll of Object.keys(this.data.registrations)) {
+      if (!validRolls.has(roll)) {
+        delete this.data.registrations[roll];
+      }
+    }
     this.seedOfficialStudentRoster();
     this.saveDatabase();
     this.logAudit("DATABASE_PURGED", "All test attempts purged and reset to fresh state by host.");
@@ -1105,6 +1158,7 @@ class ContestDatabase {
       attempts: attempts,
       attempt_history: this.data.attempt_history,
       audit_logs: this.data.audit_logs,
+      recent_logs: this.data.audit_logs,
       questions: MASTER_QUESTION_POOL,
       counts: {
         registered: registrations.length,

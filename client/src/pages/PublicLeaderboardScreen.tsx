@@ -132,7 +132,7 @@ export function PublicLeaderboardScreen() {
           <PragatiLogo variant="stacked" size="lg" subtitleText="DEPARTMENT OF MECHANICAL ENGINEERING" />
           
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-300 text-slate-900 text-xs font-bold uppercase tracking-wider shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" /> NPTEL PRACTICE TEST 1 · OFFICIAL SCOREBOARD
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" /> NPTEL PRACTICE TEST 2 · OFFICIAL SCOREBOARD
           </div>
         </div>
 

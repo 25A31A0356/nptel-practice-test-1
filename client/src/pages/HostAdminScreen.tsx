@@ -90,6 +90,9 @@ export function HostAdminScreen() {
   const [regSearch, setRegSearch] = useState("");
   const [attemptSearch, setAttemptSearch] = useState("");
   const [logSearch, setLogSearch] = useState("");
+  const [logTypeFilter, setLogTypeFilter] = useState("ALL");
+  const [logPage, setLogPage] = useState(1);
+  const [refreshingLogs, setRefreshingLogs] = useState(false);
   const [qbSearch, setQbSearch] = useState("");
   const [qbDiffFilter, setQbDiffFilter] = useState("ALL");
   const [qbPage, setQbPage] = useState(1);
@@ -191,6 +194,89 @@ export function HostAdminScreen() {
     } catch {
     }
   };
+
+  // Fetch Live Audit Event Logs
+  const handleRefreshAuditLogs = async () => {
+    playClickSound();
+    setRefreshingLogs(true);
+    try {
+      const res = await axios.get("/api/host/audit-logs", {
+        headers: { "x-host-key": passkeyInput || "738637" }
+      });
+      if (res.data?.success && Array.isArray(res.data.logs)) {
+        setDashboardData((prev: any) => ({
+          ...prev,
+          audit_logs: res.data.logs,
+          recent_logs: res.data.logs
+        }));
+        toast.success(`Refreshed ${res.data.logs.length} audit logs.`);
+      } else {
+        await fetchDashboardData();
+      }
+    } catch {
+      await fetchDashboardData();
+    } finally {
+      setRefreshingLogs(false);
+    }
+  };
+
+  // Clear All Audit Logs
+  const handleClearAllAuditLogs = async () => {
+    if (!window.confirm("Are you sure you want to clear all audit logs? This action will reset the audit log history.")) {
+      return;
+    }
+    playClickSound();
+    try {
+      const res = await axios.delete("/api/host/audit-logs", {
+        headers: { "x-host-key": passkeyInput || "738637" }
+      });
+      if (res.data?.success) {
+        playCorrectSound();
+        toast.success(res.data.message || "All audit logs cleared successfully.");
+        await handleRefreshAuditLogs();
+      } else {
+        toast.error(res.data?.message || "Failed to clear audit logs.");
+      }
+    } catch (err: any) {
+      playErrorSound();
+      toast.error(err.response?.data?.message || "Failed to clear audit logs.");
+    }
+  };
+
+  // Delete Individual Audit Log Entry
+  const handleDeleteAuditLog = async (logId: string) => {
+    if (!window.confirm("Delete this audit log record?")) {
+      return;
+    }
+    playClickSound();
+    try {
+      setDashboardData((prev: any) => ({
+        ...prev,
+        audit_logs: (prev?.audit_logs || []).filter((l: any) => l.id !== logId),
+        recent_logs: (prev?.recent_logs || []).filter((l: any) => l.id !== logId)
+      }));
+
+      const res = await axios.delete(`/api/host/audit-logs/${logId}`, {
+        headers: { "x-host-key": passkeyInput || "738637" }
+      });
+      if (res.data?.success) {
+        toast.success("Audit log entry deleted.");
+      } else {
+        toast.error(res.data?.message || "Failed to delete log entry.");
+        await fetchDashboardData();
+      }
+    } catch (err: any) {
+      playErrorSound();
+      toast.error(err.response?.data?.message || "Failed to delete log entry.");
+      await fetchDashboardData();
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "audit_logs" && isAuthenticated) {
+      handleRefreshAuditLogs();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -364,11 +450,162 @@ export function HostAdminScreen() {
     }
   };
 
-  // Export CSV
-  const handleExportCsv = () => {
+  // Safe Browser File Download Helper (Prevents immediate object URL revocation)
+  const triggerDownload = (filename: string, content: string | Blob) => {
+    try {
+      let blob: Blob;
+      if (typeof content === "string") {
+        const withBom = content.startsWith("\uFEFF") ? content : "\uFEFF" + content;
+        blob = new Blob([withBom], { type: "text/csv;charset=utf-8;" });
+      } else {
+        blob = content;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      // Keep object URL alive for 10 seconds so the browser download manager can safely complete
+      setTimeout(() => {
+        try {
+          if (document.body.contains(a)) {
+            document.body.removeChild(a);
+          }
+          window.URL.revokeObjectURL(url);
+        } catch {}
+      }, 10000);
+    } catch (err) {
+      console.error("Direct download failed:", err);
+    }
+  };
+
+  // Export CSV Helper with In-Browser Blob Download & Windows Excel UTF-8 BOM
+  const handleExportCsv = async (exportType: "results" | "roster" | "itemized" | "audit" = "results") => {
     playClickSound();
     const hostKey = passkeyInput || "738637";
-    window.open(`/api/host/export?format=csv&host_key=${hostKey}`, "_blank");
+    const defaultFilename =
+      exportType === "roster"
+        ? "nptel_registered_candidates_roster.csv"
+        : exportType === "itemized"
+        ? "nptel_candidate_itemized_responses.csv"
+        : exportType === "audit"
+        ? "nptel_examination_audit_event_logs.csv"
+        : "nptel_metal_additive_manufacturing_results.csv";
+
+    // 1. First attempt to download authoritative CSV from backend
+    try {
+      const res = await axios.get(`/api/host/export?format=csv&type=${exportType}&host_key=${hostKey}`, {
+        headers: { "x-host-key": hostKey },
+        responseType: "text"
+      });
+
+      if (res.data && typeof res.data === "string" && res.data.length > 0) {
+        triggerDownload(defaultFilename, res.data);
+        toast.success(`Exported ${defaultFilename} successfully!`);
+        return;
+      }
+    } catch (netErr) {
+      console.warn("Backend CSV export route fallback engaged:", netErr);
+    }
+
+    // 2. Direct In-Memory Fallback: Generates CSV directly so download NEVER fails
+    try {
+      let csvContent = "";
+      if (exportType === "roster") {
+        const rows = [["Roll Number", "Student Name", "Department", "Year", "Section", "Status", "Registration Time"].join(",")];
+        const regs = Object.values(dashboardData?.registrations || {});
+        for (const reg of regs as any[]) {
+          rows.push([
+            `"${reg.roll_number}"`,
+            `"${reg.student_name}"`,
+            `"${reg.department}"`,
+            `"${reg.year}"`,
+            `"${reg.section}"`,
+            `"${reg.status}"`,
+            `"${reg.registration_time || ""}"`
+          ].join(","));
+        }
+        csvContent = rows.join("\r\n");
+      } else if (exportType === "itemized") {
+        const rows = [["Roll Number", "Student Name", "Question ID", "Candidate Answer", "Submission Time"].join(",")];
+        const attempts = (dashboardData?.attempts || []) as any[];
+        for (const att of attempts) {
+          const answers = att.answers || {};
+          const assigned = att.assigned_question_ids || [];
+          for (const qId of assigned) {
+            rows.push([
+              `"${att.roll_number}"`,
+              `"${att.student_name}"`,
+              `"${qId}"`,
+              `"${answers[qId] || "UNANSWERED"}"`,
+              `"${att.submitted_at || ""}"`
+            ].join(","));
+          }
+        }
+        csvContent = rows.join("\r\n");
+      } else if (exportType === "audit") {
+        const rows = [["Log ID", "Timestamp", "Event Type", "Roll Number", "Attempt ID", "Details"].join(",")];
+        const logs = auditLogs || [];
+        for (const l of logs) {
+          rows.push([
+            `"${l.id}"`,
+            `"${l.timestamp}"`,
+            `"${l.event_type}"`,
+            `"${l.roll_number || ""}"`,
+            `"${l.attempt_id || ""}"`,
+            `"${String(l.details || "").replace(/"/g, '""')}"`
+          ].join(","));
+        }
+        csvContent = rows.join("\r\n");
+      } else {
+        // Official Classified Results Leaderboard CSV
+        // If zero students wrote the exam, this outputs ONLY the 14-column header row (empty candidate list)
+        const headers = [
+          "Rank",
+          "Roll Number",
+          "Student Name",
+          "Department",
+          "Year",
+          "Section",
+          "Final Score (/40)",
+          "Correct Count (/40)",
+          "Incorrect Count",
+          "Unanswered Count",
+          "Time Taken (MM:SS)",
+          "Time Taken (Seconds)",
+          "Status",
+          "Submission Timestamp"
+        ];
+        const rows = [headers.join(",")];
+
+        for (const entry of hostLeaderboard) {
+          rows.push([
+            entry.rank,
+            `"${entry.roll_number}"`,
+            `"${entry.student_name}"`,
+            `"${entry.department}"`,
+            `"${entry.year}"`,
+            `"${entry.section}"`,
+            entry.score,
+            entry.correct_count,
+            entry.incorrect_count,
+            entry.unanswered_count,
+            `"${entry.time_formatted}"`,
+            entry.time_taken_seconds,
+            entry.status,
+            `"${entry.submitted_at || ""}"`
+          ].join(","));
+        }
+        csvContent = rows.join("\r\n");
+      }
+
+      triggerDownload(defaultFilename, csvContent);
+      toast.success(`Exported ${defaultFilename} successfully!`);
+    } catch {
+      toast.error("Failed to generate CSV export file.");
+    }
   };
 
   // Sync Exam Data to Kaggle
@@ -466,7 +703,7 @@ export function HostAdminScreen() {
   const config = dashboardData?.config || {};
   const registrations: any[] = dashboardData?.registrations || [];
   const attempts: any[] = dashboardData?.attempts || [];
-  const auditLogs: any[] = dashboardData?.recent_logs || [];
+  const auditLogs: any[] = dashboardData?.audit_logs || dashboardData?.recent_logs || [];
   const questions: any[] = dashboardData?.questions || [];
 
   // Filtered lists
@@ -483,11 +720,41 @@ export function HostAdminScreen() {
       a.student_name.toLowerCase().includes(attemptSearch.toLowerCase())
   );
 
-  const filteredLogs = auditLogs.filter(
-    (l) =>
-      l.details.toLowerCase().includes(logSearch.toLowerCase()) ||
-      (l.roll_number && l.roll_number.toLowerCase().includes(logSearch.toLowerCase()))
-  );
+  const filteredLogs = auditLogs.filter((l) => {
+    const q = logSearch.toLowerCase().trim();
+    const details = String(l.details || "").toLowerCase();
+    const roll = String(l.roll_number || "").toLowerCase();
+    const type = String(l.event_type || "").toLowerCase();
+
+    const matchesSearch = !q || details.includes(q) || roll.includes(q) || type.includes(q);
+    if (!matchesSearch) return false;
+
+    if (logTypeFilter === "ALL") return true;
+    if (logTypeFilter === "SECURITY") {
+      return ["TAB_SWITCH", "AI_SIDEBAR_BLUR", "FULLSCREEN_EXIT", "CHEATING_DISQUALIFIED"].includes(l.event_type);
+    }
+    if (logTypeFilter === "NETWORK") {
+      return (
+        ["NETWORK_WARNING", "NETWORK_OFFLINE", "NETWORK_RECONNECT"].includes(l.event_type) ||
+        details.includes("network") ||
+        details.includes("offline")
+      );
+    }
+    if (logTypeFilter === "SUBMISSIONS") {
+      return ["MANUAL_SUBMISSION", "AUTO_SUBMIT_EXPIRED", "CONTEST_STARTED"].includes(l.event_type);
+    }
+    if (logTypeFilter === "ADMIN") {
+      return [
+        "DATABASE_PURGED",
+        "ATTEMPT_RESET",
+        "RESULTS_RELEASED",
+        "RESULTS_LOCKED",
+        "REGISTRATION_REMOVED",
+        "CONTEST_STATUS_CHANGED"
+      ].includes(l.event_type);
+    }
+    return l.event_type === logTypeFilter;
+  });
 
   const port = window.location.port || "3000";
   const contestUrl = `http://${selectedIp || "localhost"}:${port}/contest?token=${qrSession.token}`;
@@ -551,8 +818,8 @@ export function HostAdminScreen() {
             { id: "results_release", label: "Results Release", icon: Award },
             { id: "leaderboard", label: "Leaderboard", icon: Trophy },
             { id: "reset_attempt", label: "Reset Reattempt", icon: RotateCcw },
-            { id: "question_bank", label: "Question Bank (60)", icon: Code2 },
-            { id: "audit_logs", label: "Audit Event Logs", icon: FileText },
+            { id: "question_bank", label: `Question Bank (${questions.length || 52})`, icon: Code2 },
+            { id: "audit_logs", label: `Audit Event Logs (${auditLogs.length})`, icon: FileText },
             { id: "export", label: "Export Records", icon: Download },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -583,7 +850,7 @@ export function HostAdminScreen() {
           {activeTab === "dashboard" && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-black text-slate-950 uppercase tracking-tight">NPTEL Practice Test 1 — Invigilator Overview</h2>
+                <h2 className="text-xl font-black text-slate-950 uppercase tracking-tight">NPTEL Practice Test 2 — Invigilator Overview</h2>
                 <p className="text-xs text-slate-600 font-medium">Pragati University · PatHub Examination Platform</p>
               </div>
 
@@ -999,12 +1266,12 @@ export function HostAdminScreen() {
                       </span>
                     </h2>
                     <p className="text-xs text-slate-600">
-                      Official 40-Question NPTEL Practice Test 1 Results (+1.0 Correct, -0.5 Incorrect).
+                      Official 40-Question NPTEL Practice Test 2 Results (+1.0 Correct, -0.5 Incorrect).
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={handleExportCsv}
+                      onClick={() => handleExportCsv("results")}
                       className="px-3.5 py-2 rounded-xl bg-black hover:bg-slate-800 text-white font-bold text-xs uppercase flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                     >
                       <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Export Full CSV
@@ -1414,29 +1681,292 @@ export function HostAdminScreen() {
           })()}
 
           {/* 9. AUDIT LOGS TAB */}
-          {activeTab === "audit_logs" && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-950 uppercase">Complete Audit Logs</h2>
-                <p className="text-xs text-slate-600 font-medium">Timestamped record of all examination events</p>
-              </div>
+          {activeTab === "audit_logs" && (() => {
+            const itemsPerPage = 35;
+            const totalPages = Math.max(1, Math.ceil(filteredLogs.length / itemsPerPage));
+            const currentPage = Math.min(logPage, totalPages);
+            const paginatedLogs = filteredLogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-              <div className="bg-white border border-slate-300 rounded-2xl p-4 space-y-2 max-h-[70vh] overflow-y-auto font-mono text-xs shadow-sm">
-                {auditLogs.map((log: any) => (
-                  <div key={log.id} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-start justify-between gap-3">
-                    <div>
-                      <span className="text-slate-950 font-bold">[{log.event_type}]</span>{" "}
-                      {log.roll_number && <span className="text-black font-black">({log.roll_number})</span>}{" "}
-                      <span className="text-slate-700">{log.details}</span>
-                    </div>
-                    <span className="text-[10px] text-slate-500 shrink-0 font-bold">
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </span>
+            const securityCount = auditLogs.filter((l) =>
+              ["TAB_SWITCH", "AI_SIDEBAR_BLUR", "FULLSCREEN_EXIT", "CHEATING_DISQUALIFIED"].includes(l.event_type)
+            ).length;
+            const networkCount = auditLogs.filter(
+              (l) =>
+                ["NETWORK_WARNING", "NETWORK_OFFLINE", "NETWORK_RECONNECT"].includes(l.event_type) ||
+                String(l.details || "").toLowerCase().includes("network")
+            ).length;
+            const submissionCount = auditLogs.filter((l) =>
+              ["MANUAL_SUBMISSION", "AUTO_SUBMIT_EXPIRED", "CONTEST_STARTED"].includes(l.event_type)
+            ).length;
+
+            const getEventBadge = (type: string) => {
+              if (type === "CHEATING_DISQUALIFIED") {
+                return "bg-rose-100 text-rose-800 border-rose-300";
+              }
+              if (["TAB_SWITCH", "AI_SIDEBAR_BLUR", "FULLSCREEN_EXIT"].includes(type)) {
+                return "bg-amber-100 text-amber-900 border-amber-300";
+              }
+              if (["NETWORK_WARNING", "NETWORK_OFFLINE", "NETWORK_RECONNECT"].includes(type)) {
+                return "bg-sky-100 text-sky-900 border-sky-300";
+              }
+              if (["MANUAL_SUBMISSION", "AUTO_SUBMIT_EXPIRED", "RESULTS_RELEASED"].includes(type)) {
+                return "bg-emerald-100 text-emerald-900 border-emerald-300";
+              }
+              return "bg-slate-100 text-slate-800 border-slate-300";
+            };
+
+            return (
+              <div className="space-y-5">
+                {/* Header Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-slate-950 uppercase flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-black" />
+                      Live Examination Audit Board
+                      <span className="text-xs font-mono font-bold bg-slate-900 text-white px-2 py-0.5 rounded-full">
+                        {auditLogs.length} Records
+                      </span>
+                    </h2>
+                    <p className="text-xs text-slate-600 font-medium">
+                      Cryptographically tracked, immutable timeline of all student sessions, network status & examination events
+                    </p>
                   </div>
-                ))}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleRefreshAuditLogs}
+                      disabled={refreshingLogs}
+                      className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 font-bold text-xs uppercase flex items-center gap-1.5 transition cursor-pointer shadow-sm disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${refreshingLogs ? "animate-spin text-black" : "text-slate-600"}`} />
+                      {refreshingLogs ? "Syncing..." : "Refresh"}
+                    </button>
+                    <button
+                      onClick={handleClearAllAuditLogs}
+                      className="px-3 py-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 font-bold text-xs uppercase flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                      title="Clear all recorded audit event logs"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      Clear All Logs
+                    </button>
+                    <button
+                      onClick={() => handleExportCsv("audit")}
+                      className="px-3 py-2 rounded-xl bg-black hover:bg-slate-800 text-white font-bold text-xs uppercase flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Export Logs CSV
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Metric Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Audit Events</div>
+                    <div className="text-2xl font-black text-slate-950 font-mono mt-0.5">{auditLogs.length}</div>
+                    <div className="text-[10px] text-slate-400 mt-1">100% recorded</div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                    <div className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Security & Focus Events</div>
+                    <div className="text-2xl font-black text-amber-700 font-mono mt-0.5">{securityCount}</div>
+                    <div className="text-[10px] text-slate-400 mt-1">Focus blurs / tab alerts</div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                    <div className="text-[11px] font-bold text-sky-700 uppercase tracking-wider">Network Safeguards</div>
+                    <div className="text-2xl font-black text-sky-700 font-mono mt-0.5">{networkCount}</div>
+                    <div className="text-[10px] text-emerald-600 font-bold mt-1">Non-disqualifying safe events</div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                    <div className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Submissions Recorded</div>
+                    <div className="text-2xl font-black text-emerald-700 font-mono mt-0.5">{submissionCount}</div>
+                    <div className="text-[10px] text-slate-400 mt-1">Completed attempts</div>
+                  </div>
+                </div>
+
+                {/* Search & Filter Toolbar */}
+                <div className="bg-white border border-slate-300 rounded-xl p-3 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search audit trail by Roll Number, Event Type, or details..."
+                      value={logSearch}
+                      onChange={(e) => {
+                        setLogSearch(e.target.value);
+                        setLogPage(1);
+                      }}
+                      className="w-full pl-9 pr-8 py-2 text-xs rounded-lg border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                    {logSearch && (
+                      <button
+                        onClick={() => {
+                          setLogSearch("");
+                          setLogPage(1);
+                        }}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-black text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 text-xs font-bold">
+                    {[
+                      { id: "ALL", label: `All (${auditLogs.length})` },
+                      { id: "SECURITY", label: `Security (${securityCount})` },
+                      { id: "NETWORK", label: `Network (${networkCount})` },
+                      { id: "SUBMISSIONS", label: `Submissions (${submissionCount})` },
+                      { id: "ADMIN", label: "Admin Actions" }
+                    ].map((pill) => (
+                      <button
+                        key={pill.id}
+                        onClick={() => {
+                          setLogTypeFilter(pill.id);
+                          setLogPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg shrink-0 transition cursor-pointer text-xs ${
+                          logTypeFilter === pill.id
+                            ? "bg-black text-white"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {pill.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Logs Stream Container */}
+                <div className="bg-white border border-slate-300 rounded-2xl p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-600 pb-2 border-b border-slate-200">
+                    <span className="font-semibold">
+                      Showing <strong className="text-slate-950">{paginatedLogs.length}</strong> of <strong className="text-slate-950">{filteredLogs.length}</strong> filtered events
+                    </span>
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          disabled={currentPage <= 1}
+                          onClick={() => setLogPage((p) => Math.max(1, p - 1))}
+                          className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-xs font-bold text-slate-800 cursor-pointer"
+                        >
+                          ← Prev
+                        </button>
+                        <span className="font-mono text-xs">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <button
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
+                          className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-xs font-bold text-slate-800 cursor-pointer"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {paginatedLogs.length === 0 ? (
+                    <div className="text-center py-12 space-y-2">
+                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div className="text-sm font-bold text-slate-800">No matching audit events found</div>
+                      <p className="text-xs text-slate-500">
+                        {logSearch || logTypeFilter !== "ALL"
+                          ? "Try clearing your search query or switching to 'All' filter."
+                          : "Audit events will automatically appear here as candidates register, start, and complete exams."}
+                      </p>
+                      {(logSearch || logTypeFilter !== "ALL") && (
+                        <button
+                          onClick={() => {
+                            setLogSearch("");
+                            setLogTypeFilter("ALL");
+                            setLogPage(1);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-black text-white text-xs font-bold mt-2 cursor-pointer hover:bg-slate-800"
+                        >
+                          Reset Filters
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                      {paginatedLogs.map((log: any) => {
+                        const dateObj = new Date(log.timestamp);
+                        const timeStr = dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                        const dateStr = dateObj.toLocaleDateString([], { month: "short", day: "numeric" });
+
+                        return (
+                          <div
+                            key={log.id}
+                            className="bg-slate-50 hover:bg-slate-100/70 p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-start justify-between gap-2 transition"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded border uppercase ${getEventBadge(log.event_type)}`}>
+                                  {log.event_type}
+                                </span>
+                                {log.roll_number && (
+                                  <span className="text-xs font-mono font-black bg-black text-white px-2 py-0.5 rounded">
+                                    {log.roll_number}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-800 font-medium leading-relaxed font-sans">
+                                {log.details}
+                              </p>
+                            </div>
+                            <div className="flex items-center sm:items-start gap-2 shrink-0">
+                              <div className="text-[11px] font-mono font-bold text-slate-500 text-left sm:text-right">
+                                <div>{timeStr}</div>
+                                <div className="text-[10px] text-slate-400">{dateStr}</div>
+                              </div>
+                              <button
+                                onClick={() => handleDeleteAuditLog(log.id)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                title="Delete this audit log entry"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Bottom Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between text-xs text-slate-600 pt-3 border-t border-slate-200">
+                      <span>
+                        Page <strong className="text-slate-950">{currentPage}</strong> of <strong className="text-slate-950">{totalPages}</strong>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          disabled={currentPage <= 1}
+                          onClick={() => setLogPage((p) => Math.max(1, p - 1))}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 disabled:opacity-40 text-xs font-bold text-slate-800 cursor-pointer"
+                        >
+                          ← Previous
+                        </button>
+                        <button
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 disabled:opacity-40 text-xs font-bold text-slate-800 cursor-pointer"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 10. EXPORT TAB */}
           {activeTab === "export" && (
@@ -1446,14 +1976,88 @@ export function HostAdminScreen() {
                 <p className="text-xs text-slate-600 font-medium">Download complete results and logs for official documentation</p>
               </div>
 
-              <div className="bg-white border border-slate-300 rounded-2xl p-6 space-y-4 shadow-sm">
-                <h3 className="text-sm font-black text-slate-950 uppercase">Official Data Export</h3>
-                <button
-                  onClick={handleExportCsv}
-                  className="w-full py-4 rounded-xl bg-black hover:bg-slate-800 text-white font-black text-sm uppercase tracking-wider shadow-md flex items-center justify-center gap-2 transition cursor-pointer"
-                >
-                  <FileSpreadsheet className="w-5 h-5 text-emerald-400" /> Download Full Results CSV
-                </button>
+              {/* Simplified & Classified Downloads Card */}
+              <div className="bg-white border-2 border-slate-300 rounded-2xl p-6 space-y-5 shadow-sm">
+                <div>
+                  <h3 className="text-base font-black text-slate-950 uppercase flex items-center gap-2">
+                    <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                    Simplified & Classified Results Download Center
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Direct Excel / CSV file downloads with official classified rankings, scoring breakdown, and candidate logs.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3.5">
+                  {/* 1. Official Results Leaderboard CSV */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-sm text-slate-950">1. Classified Examination Results CSV</span>
+                        <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-300">
+                          Official Format
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1 font-mono text-[11px]">
+                        Rank, Roll Number, Student Name, Department, Year, Section, Final Score (/40), Correct Count (/40), Incorrect Count, Unanswered Count, Time Taken (MM:SS), Time Taken (Seconds), Status, Submission Timestamp
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleExportCsv("results")}
+                      className="px-4 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shrink-0"
+                    >
+                      <Download className="w-4 h-4 text-emerald-400" /> Download Results CSV
+                    </button>
+                  </div>
+
+                  {/* 2. Registered Candidates Attendance Roster */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="font-extrabold text-sm text-slate-950">2. Registered Candidates Roster CSV</span>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Complete 65-student registry: Roll Number, Name, Department, Year, Section, Registration Timestamp, Exam Status.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleExportCsv("roster")}
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shrink-0"
+                    >
+                      <Download className="w-4 h-4 text-sky-400" /> Download Roster CSV
+                    </button>
+                  </div>
+
+                  {/* 3. Itemized Responses CSV */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="font-extrabold text-sm text-slate-950">3. Itemized Responses & Answers CSV</span>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Detailed question-by-question candidate selections, assigned questions, and timestamp log.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleExportCsv("itemized")}
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shrink-0"
+                    >
+                      <Download className="w-4 h-4 text-purple-400" /> Download Responses CSV
+                    </button>
+                  </div>
+
+                  {/* 4. Complete Audit Trail Logs CSV */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="font-extrabold text-sm text-slate-950">4. Examination Audit Trail Logs CSV</span>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Complete timestamped audit stream of all student sessions, network status updates, security warnings, and host actions.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleExportCsv("audit")}
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm shrink-0"
+                    >
+                      <Download className="w-4 h-4 text-amber-400" /> Download Audit CSV
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Kaggle Dataset Backup & Sync Card */}
@@ -1474,7 +2078,7 @@ export function HostAdminScreen() {
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono space-y-1">
-                  <p className="text-slate-600">Dataset Target: <strong className="text-slate-950">tsaiteja2008/nptel-practice-test-1-results</strong></p>
+                  <p className="text-slate-600">Dataset Target: <strong className="text-slate-950">tsaiteja2008/nptel-practice-test-2-results</strong></p>
                   <p className="text-slate-600">Included Files: <strong className="text-slate-900">leaderboard.csv, responses.csv, audit_trail.csv, contest_db.json</strong></p>
                 </div>
 
@@ -1535,7 +2139,7 @@ export function HostAdminScreen() {
             <div className="space-y-1">
               <PragatiLogo variant="header" size="md" subtitleText="CBT EXAMINATION SYSTEM" />
               <h1 className="text-2xl sm:text-3xl font-black text-slate-950 uppercase tracking-tight">
-                NPTEL PRACTICE TEST 1 · EXAM HALL PORTAL
+                NPTEL PRACTICE TEST 2 · EXAM HALL PORTAL
               </h1>
             </div>
 

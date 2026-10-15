@@ -16,53 +16,7 @@ const STORAGE_KEY = "engineers_day_contest_db_v2";
 const MASTER_QUESTION_POOL: QuestionDef[] = generateQuestionBank();
 const QUESTION_MAP: Map<string, QuestionDef> = new Map(MASTER_QUESTION_POOL.map((q) => [q.id, q]));
 
-// Distinct family pools partitioned by Language and Difficulty
-const EASY_C_FAMILIES = new Map<string, QuestionDef[]>();
-const EASY_PY_FAMILIES = new Map<string, QuestionDef[]>();
-const MEDIUM_C_FAMILIES = new Map<string, QuestionDef[]>();
-const MEDIUM_PY_FAMILIES = new Map<string, QuestionDef[]>();
-const HARD_C_FAMILIES = new Map<string, QuestionDef[]>();
-const HARD_PY_FAMILIES = new Map<string, QuestionDef[]>();
 
-for (const q of MASTER_QUESTION_POOL) {
-  const isC = q.language === "c";
-  if (q.difficulty === "EASY") {
-    const map = isC ? EASY_C_FAMILIES : EASY_PY_FAMILIES;
-    if (!map.has(q.question_family_id)) map.set(q.question_family_id, []);
-    map.get(q.question_family_id)!.push(q);
-  } else if (q.difficulty === "MEDIUM") {
-    const map = isC ? MEDIUM_C_FAMILIES : MEDIUM_PY_FAMILIES;
-    if (!map.has(q.question_family_id)) map.set(q.question_family_id, []);
-    map.get(q.question_family_id)!.push(q);
-  } else {
-    const map = isC ? HARD_C_FAMILIES : HARD_PY_FAMILIES;
-    if (!map.has(q.question_family_id)) map.set(q.question_family_id, []);
-    map.get(q.question_family_id)!.push(q);
-  }
-}
-
-const EASY_C_KEYS = Array.from(EASY_C_FAMILIES.keys());
-const EASY_PY_KEYS = Array.from(EASY_PY_FAMILIES.keys());
-const MEDIUM_C_KEYS = Array.from(MEDIUM_C_FAMILIES.keys());
-const MEDIUM_PY_KEYS = Array.from(MEDIUM_PY_FAMILIES.keys());
-const HARD_C_KEYS = Array.from(HARD_C_FAMILIES.keys());
-const HARD_PY_KEYS = Array.from(HARD_PY_FAMILIES.keys());
-
-interface DistributionPlan {
-  easyC: number;
-  easyPy: number;
-  medC: number;
-  medPy: number;
-  hardC: number;
-  hardPy: number;
-}
-
-const DISTRIBUTION_PATTERNS: DistributionPlan[] = [
-  { easyC: 2, easyPy: 1, medC: 1, medPy: 2, hardC: 2, hardPy: 2 },
-  { easyC: 1, easyPy: 2, medC: 2, medPy: 1, hardC: 2, hardPy: 2 },
-  { easyC: 2, easyPy: 1, medC: 2, medPy: 1, hardC: 1, hardPy: 3 },
-  { easyC: 1, easyPy: 2, medC: 1, medPy: 2, hardC: 3, hardPy: 1 }
-];
 
 function generateRandomHex(length = 8): string {
   const chars = "0123456789ABCDEF";
@@ -185,6 +139,33 @@ export class ClientContestDatabase {
     this.saveDatabase();
   }
 
+  public getAuditLogs(): AuditLog[] {
+    return [...this.data.audit_logs];
+  }
+
+  public clearAllAuditLogs(): { success: boolean; message: string } {
+    this.data.audit_logs = [
+      {
+        id: `LOG-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        event_type: "CONTEST_STATUS_CHANGED",
+        details: "All previous audit event logs cleared by Event Host."
+      }
+    ];
+    this.saveDatabase();
+    return { success: true, message: "Audit logs successfully cleared." };
+  }
+
+  public deleteAuditLog(logId: string): { success: boolean; message: string } {
+    const initialLen = this.data.audit_logs.length;
+    this.data.audit_logs = this.data.audit_logs.filter((l) => l.id !== logId);
+    if (this.data.audit_logs.length < initialLen) {
+      this.saveDatabase();
+      return { success: true, message: "Audit log entry deleted successfully." };
+    }
+    return { success: false, message: "Audit log entry not found." };
+  }
+
   public getConfig(): ContestConfig {
     return { ...this.data.config };
   }
@@ -243,6 +224,10 @@ export class ClientContestDatabase {
   public getRegistration(roll_number: string): Registration | null {
     const roll = roll_number.trim().toUpperCase();
     return this.data.registrations[roll] || null;
+  }
+
+  public getAllRegistrations(): Registration[] {
+    return Object.values(this.data.registrations);
   }
 
   public getQRSession(): QRSession {
@@ -307,36 +292,30 @@ export class ClientContestDatabase {
     return { success: true, scan_count: this.data.qr_session.scan_count, message: "Real scan verified and recorded." };
   }
 
-  public assignUniqueQuestionsForAttempt(attemptIndex: number, _rollNumber: string): string[] {
-    const k = attemptIndex;
-    const plan = DISTRIBUTION_PATTERNS[k % DISTRIBUTION_PATTERNS.length];
-    const assignedIds: string[] = [];
-    const usedFamilies = new Set<string>();
+  public assignUniqueQuestionsForAttempt(attemptIndex: number, rollNumber: string): string[] {
+    const allIds = MASTER_QUESTION_POOL.map((q) => q.id);
+    const shuffled = [...allIds];
 
-    const pickFromPool = (keys: string[], familyMap: Map<string, QuestionDef[]>, count: number, offsetMultiplier: number) => {
-      for (let i = 0; i < count; i++) {
-        const famKey = keys[(k * offsetMultiplier + i) % keys.length];
-        const variants = familyMap.get(famKey)!;
-        const variantIdx = Math.floor((k * offsetMultiplier + i) / keys.length) % variants.length;
-        const selected = variants[variantIdx];
-        assignedIds.push(selected.id);
-        usedFamilies.add(selected.question_family_id);
-      }
+    // Seeded PRNG using hash of rollNumber + attemptIndex
+    const seedStr = `${rollNumber.toUpperCase()}_ATT_${attemptIndex}_NPTEL_EXAM`;
+    let seed = 0;
+    for (let i = 0; i < seedStr.length; i++) {
+      seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+    }
+
+    const seededRandom = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
     };
 
-    // 1. Easy Questions (Total = 3)
-    pickFromPool(EASY_C_KEYS, EASY_C_FAMILIES, plan.easyC, 3);
-    pickFromPool(EASY_PY_KEYS, EASY_PY_FAMILIES, plan.easyPy, 3);
+    // Fisher-Yates shuffle
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
 
-    // 2. Medium Questions (Total = 3)
-    pickFromPool(MEDIUM_C_KEYS, MEDIUM_C_FAMILIES, plan.medC, 3);
-    pickFromPool(MEDIUM_PY_KEYS, MEDIUM_PY_FAMILIES, plan.medPy, 3);
-
-    // 3. Hard Questions (Total = 4)
-    pickFromPool(HARD_C_KEYS, HARD_C_FAMILIES, plan.hardC, 4);
-    pickFromPool(HARD_PY_KEYS, HARD_PY_FAMILIES, plan.hardPy, 4);
-
-    return assignedIds;
+    // Select questions for candidate
+    return shuffled.slice(0, Math.min(shuffled.length, 40));
   }
 
   public verifyEntry(roll_number: string, token?: string): {
@@ -683,7 +662,11 @@ export class ClientContestDatabase {
     return { success: true, message: "Answer saved." };
   }
 
-  public logContestantEvent(attempt_id: string, event_type: "TAB_SWITCH" | "BACK_NAVIGATION", details: string): {
+  public logContestantEvent(
+    attempt_id: string,
+    event_type: "TAB_SWITCH" | "BACK_NAVIGATION" | "WINDOW_BLUR" | "FULLSCREEN_EXIT" | "AI_SIDEBAR_DETECTED" | "NETWORK_OFFLINE" | "NETWORK_RECONNECT" | "NETWORK_WARNING",
+    details: string
+  ): {
     success: boolean;
     terminated: boolean;
     reason?: string;
@@ -694,12 +677,36 @@ export class ClientContestDatabase {
       return { success: false, terminated: true, reason: "Attempt is no longer active." };
     }
 
+    const isNetworkIssue =
+      event_type === "NETWORK_OFFLINE" ||
+      event_type === "NETWORK_RECONNECT" ||
+      event_type === "NETWORK_WARNING" ||
+      /network|offline|disconnect|reconnect|wifi|cellular|connection|internet/i.test(details || "");
+
+    if (isNetworkIssue) {
+      this.logAudit("NETWORK_WARNING", `Candidate network event logged (${event_type}): ${details} - Protected from disqualification.`, attempt.roll_number, attempt_id);
+      this.saveDatabase();
+      return { success: true, terminated: false, switch_count: attempt.tab_switch_count };
+    }
+
+    if (event_type === "WINDOW_BLUR" || event_type === "AI_SIDEBAR_DETECTED") {
+      this.logAudit("AI_SIDEBAR_BLUR", `Focus shift / blur noticed for ${attempt.roll_number}: ${details} (Non-disqualifying notice).`, attempt.roll_number, attempt_id);
+      this.saveDatabase();
+      return { success: true, terminated: false, switch_count: attempt.tab_switch_count };
+    }
+
+    if (event_type === "FULLSCREEN_EXIT") {
+      this.logAudit("FULLSCREEN_EXIT", `Candidate exited fullscreen: ${details}`, attempt.roll_number, attempt_id);
+      this.saveDatabase();
+      return { success: true, terminated: false, switch_count: attempt.tab_switch_count };
+    }
+
     if (event_type === "TAB_SWITCH") {
       attempt.tab_switch_count += 1;
       this.logAudit("TAB_SWITCH", `Contestant switched tab/window (Violation #${attempt.tab_switch_count}). ${details}`, attempt.roll_number, attempt_id);
 
       const maxSwitches = this.data.config.max_tab_switches || 3;
-      if (attempt.tab_switch_count >= maxSwitches) {
+      if (attempt.tab_switch_count > maxSwitches) {
         this.finalizeAttempt(attempt_id, "DISQUALIFIED", `Anti-cheat trigger: Exceeded allowed window switch limit (${maxSwitches} violations).`);
         return {
           success: true,
@@ -1015,6 +1022,7 @@ export class ClientContestDatabase {
       registrations: Object.values(this.data.registrations),
       attempts: Object.values(this.data.attempts),
       audit_logs: this.data.audit_logs,
+      recent_logs: this.data.audit_logs,
       stats
     };
   }

@@ -240,7 +240,7 @@ export function setupClientApiBridge() {
       // 15. Host Login (Password: BOOYAHBOY)
       else if (apiPath === "/api/host/login" && method === "post") {
         const { password } = body;
-        if (password === "BOOYAHBOY") {
+        if (password === "738637" || password === "BOOYAHBOY") {
           responseData = { success: true, message: "Event Host Console Unlocked." };
         } else {
           status = 401;
@@ -306,7 +306,12 @@ export function setupClientApiBridge() {
       }
 
       // 23. Host Audit Logs
-      else if (apiPath === "/api/host/audit-logs") {
+      else if (apiPath === "/api/host/audit-logs" && method === "delete") {
+        responseData = clientContestDb.clearAllAuditLogs();
+      } else if (apiPath.startsWith("/api/host/audit-logs/") && method === "delete") {
+        const logId = apiPath.replace("/api/host/audit-logs/", "");
+        responseData = clientContestDb.deleteAuditLog(logId);
+      } else if (apiPath === "/api/host/audit-logs") {
         responseData = { success: true, logs: clientContestDb.getHostDashboardData().audit_logs };
       }
 
@@ -316,6 +321,76 @@ export function setupClientApiBridge() {
         const result = clientContestDb.purgeAllContestData(String(passkey).trim());
         if (!result.success) status = 403;
         responseData = result;
+      }
+
+      // 25. Host Export CSV/JSON
+      else if (apiPath === "/api/host/export") {
+        const format = params.format || "json";
+        const exportType = params.type || "results";
+        if (format === "csv") {
+          let csv = "";
+          if (exportType === "roster") {
+            const rows = [["Roll Number", "Student Name", "Department", "Year", "Section", "Status", "Registration Time"].join(",")];
+            for (const reg of clientContestDb.getAllRegistrations()) {
+              rows.push([
+                `"${reg.roll_number}"`,
+                `"${reg.student_name}"`,
+                `"${reg.department}"`,
+                `"${reg.year}"`,
+                `"${reg.section}"`,
+                `"${reg.status}"`,
+                `"${reg.registration_time || ""}"`
+              ].join(","));
+            }
+            csv = rows.join("\r\n");
+          } else if (exportType === "audit" || exportType === "logs") {
+            const rows = [["Log ID", "Timestamp", "Event Type", "Roll Number", "Attempt ID", "Details"].join(",")];
+            const logs = clientContestDb.getHostDashboardData().audit_logs;
+            for (const l of logs) {
+              rows.push([
+                `"${l.id}"`,
+                `"${l.timestamp}"`,
+                `"${l.event_type}"`,
+                `"${l.roll_number || ""}"`,
+                `"${l.attempt_id || ""}"`,
+                `"${String(l.details || "").replace(/"/g, '""')}"`
+              ].join(","));
+            }
+            csv = rows.join("\r\n");
+          } else {
+            const headers = [
+              "Rank", "Roll Number", "Student Name", "Department", "Year", "Section",
+              "Final Score (/40)", "Correct Count (/40)", "Incorrect Count", "Unanswered Count",
+              "Time Taken (MM:SS)", "Time Taken (Seconds)", "Status", "Submission Timestamp"
+            ];
+            const rows = [headers.join(",")];
+            const lb = clientContestDb.getLeaderboard(true).leaderboard;
+            const seen = new Set<string>();
+            for (const e of lb) {
+              seen.add(e.roll_number.toUpperCase());
+              rows.push([
+                e.rank,
+                `"${e.roll_number}"`,
+                `"${e.student_name}"`,
+                `"${e.department}"`,
+                `"${e.year}"`,
+                `"${e.section}"`,
+                e.score,
+                e.correct_count,
+                e.incorrect_count,
+                e.unanswered_count,
+                `"${e.time_formatted}"`,
+                e.time_taken_seconds,
+                e.status,
+                `"${e.submitted_at || ""}"`
+              ].join(","));
+            }
+            csv = rows.join("\r\n");
+          }
+          responseData = "\uFEFF" + csv;
+        } else {
+          responseData = { success: true, data: clientContestDb.getHostDashboardData() };
+        }
       }
 
       else {

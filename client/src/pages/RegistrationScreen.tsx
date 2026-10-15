@@ -41,7 +41,7 @@ export function RegistrationScreen() {
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold tracking-wider uppercase">
             <Sparkles className="w-3.5 h-3.5" />
-            NPTEL PRACTICE TEST 1 · CANDIDATE ACCESS
+            NPTEL PRACTICE TEST 2 · CANDIDATE ACCESS
           </div>
         </div>
 
@@ -52,7 +52,7 @@ export function RegistrationScreen() {
             <div>
               <p className="font-bold text-white">No Separate Registration Required</p>
               <p className="text-xs text-slate-300 mt-1">
-                Candidate Roll Numbers are pre-assigned by Pragati University for NPTEL Practice Test 1. Simply enter your official Roll Number below to start your examination.
+                Candidate Roll Numbers are pre-assigned by Pragati University for NPTEL Practice Test 2. Simply enter your official Roll Number below to start your examination.
               </p>
             </div>
           </div>

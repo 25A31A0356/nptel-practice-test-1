@@ -92,7 +92,7 @@ export function HomeScreen() {
             </span>
             <span className="text-slate-300">|</span>
             <span className="text-slate-800 font-bold tracking-wide">
-              NPTEL PRACTICE TEST 1
+              NPTEL PRACTICE TEST 2
             </span>
             <span className="hidden md:inline-block text-slate-300">|</span>
             <span className="hidden md:inline-block text-slate-500 font-medium">
@@ -458,7 +458,7 @@ export function HomeScreen() {
               <div className="flex items-center gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-slate-900" />
                 <h3 className="font-black text-slate-900 uppercase text-sm tracking-wide">
-                  NPTEL Practice Test 1 — Instructions to Candidates
+                  NPTEL Practice Test 2 — Instructions to Candidates
                 </h3>
               </div>
               <button

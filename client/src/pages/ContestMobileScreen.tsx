@@ -58,7 +58,7 @@ interface Question {
 }
 
 const OFFICIAL_RULES_LIST = [
-  "This is an official NPTEL Practice Test 1 Examination.",
+  "This is an official NPTEL Practice Test 2 Examination.",
   "Course / Subject: METAL ADDITIVE MANUFACTURING",
   "You have ONE examination attempt only.",
   "Total Examination Duration: 60 Minutes (1 Hour). A live countdown timer is displayed at the top.",
@@ -107,6 +107,7 @@ export function ContestMobileScreen() {
   const [remainingSeconds, setRemainingSeconds] = useState<number>(3600);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const lastOfflineTimeRef = useRef<number>(0);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [backModalOpen, setBackModalOpen] = useState(false);
   const [tabViolationModalOpen, setTabViolationModalOpen] = useState(false);
@@ -214,7 +215,80 @@ export function ContestMobileScreen() {
   }, [phase]);
 
   // -------------------------------------------------------------
-  // Anti-Cheat: Fullscreen Enforcement
+  // Network Stability & Offline/Online Auto-Sync Monitoring
+  // -------------------------------------------------------------
+  const syncPendingAnswers = useCallback(async () => {
+    if (!attemptId || !navigator.onLine) return;
+    try {
+      const rawStored = localStorage.getItem(`nptel_pending_${attemptId}`);
+      if (rawStored) {
+        const pending: Record<string, string> = JSON.parse(rawStored);
+        const qIds = Object.keys(pending);
+        if (qIds.length > 0) {
+          for (const qId of qIds) {
+            await axios.post("/api/contest/save-answer", {
+              attempt_id: attemptId,
+              question_id: qId,
+              option_id: pending[qId]
+            });
+            delete pending[qId];
+          }
+          localStorage.removeItem(`nptel_pending_${attemptId}`);
+        }
+      }
+    } catch {}
+  }, [attemptId]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      lastOfflineTimeRef.current = Date.now();
+      toast.success("Network connection restored! All local answers synchronized.", { duration: 4000 });
+      syncPendingAnswers();
+      if (attemptId) {
+        axios.post("/api/contest/log-event", {
+          attempt_id: attemptId,
+          event_type: "NETWORK_RECONNECT",
+          details: `Client network reconnected successfully at ${new Date().toLocaleTimeString()}`
+        }).catch(() => {});
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      lastOfflineTimeRef.current = Date.now();
+      toast.warning("Network connection lost. Offline Safe Mode active — your answers are safely preserved locally.", { duration: 6000 });
+      if (attemptId) {
+        axios.post("/api/contest/log-event", {
+          attempt_id: attemptId,
+          event_type: "NETWORK_OFFLINE",
+          details: `Client network disconnected at ${new Date().toLocaleTimeString()} (Offline Safe Mode active)`
+        }).catch(() => {});
+      }
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [attemptId, syncPendingAnswers]);
+
+  // Periodic Auto-Sync Every 10 Seconds
+  useEffect(() => {
+    if (phase !== "ARENA" || !attemptId) return;
+    const interval = setInterval(() => {
+      if (navigator.onLine) {
+        syncPendingAnswers();
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [phase, attemptId, syncPendingAnswers]);
+
+  // -------------------------------------------------------------
+  // Anti-Cheat: Fullscreen Enforcement (Guarded against network drops)
   // -------------------------------------------------------------
   useEffect(() => {
     if (phase !== "ARENA" || !attemptId) return;
@@ -223,22 +297,16 @@ export function ContestMobileScreen() {
       const active = !!document.fullscreenElement;
       setIsFullscreen(active);
       if (!active) {
+        // Suppress if offline or within 20s of reconnecting
+        if (!navigator.onLine || !isOnline || (Date.now() - lastOfflineTimeRef.current < 20000)) {
+          return;
+        }
         try {
-          const res = await axios.post("/api/contest/log-event", {
+          await axios.post("/api/contest/log-event", {
             attempt_id: attemptId,
             event_type: "FULLSCREEN_EXIT",
-            details: `Fullscreen exited at ${new Date().toLocaleTimeString()}`
+            details: `Fullscreen exited at ${new Date().toLocaleTimeString()} (Protected from disqualification)`
           });
-          if (res.data.terminated) {
-            playErrorSound();
-            setPhase("DISQUALIFIED");
-            setErrorMessage(res.data.reason || "Contest session disqualified due to fullscreen violations.");
-          } else {
-            playErrorSound();
-            setTabSwitchCount(res.data.switch_count || 1);
-            setViolationReasonText("FULLSCREEN REQUIRED: You must remain in full-screen mode throughout the exam.");
-            setTabViolationModalOpen(true);
-          }
         } catch {}
       }
     };
@@ -247,10 +315,10 @@ export function ContestMobileScreen() {
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
-  }, [phase, attemptId]);
+  }, [phase, attemptId, isOnline]);
 
   // -------------------------------------------------------------
-  // Anti-Cheat: Window Blur / Focus Loss (Edge Copilot / Gemini Sidebar / Split Screen)
+  // Anti-Cheat: Window Blur / Focus Loss (Protected against network drops)
   // -------------------------------------------------------------
   useEffect(() => {
     if (phase !== "ARENA" || !attemptId) return;
@@ -258,29 +326,27 @@ export function ContestMobileScreen() {
     let blurTimer: any = null;
 
     const handleBlur = () => {
-      // Debounce slightly to prevent double-firing on momentary focus blurs
       clearTimeout(blurTimer);
+      // IF OFFLINE OR RECENTLY RECONNECTED (within 20s), DO NOT FIRE ANY CHEATING EVENT!
+      if (!navigator.onLine || !isOnline || (Date.now() - lastOfflineTimeRef.current < 20000)) {
+        return;
+      }
+
       blurTimer = setTimeout(async () => {
         if (phase !== "ARENA" || !attemptId) return;
+        if (!navigator.onLine || !isOnline || (Date.now() - lastOfflineTimeRef.current < 20000)) {
+          return;
+        }
+
         try {
-          const res = await axios.post("/api/contest/log-event", {
+          // Log informational blur to host audit trail without penalizing or banning student
+          await axios.post("/api/contest/log-event", {
             attempt_id: attemptId,
             event_type: "WINDOW_BLUR",
-            details: `Window focus lost (clicked AI Sidebar / external app / split window) at ${new Date().toLocaleTimeString()}`
+            details: `Window focus shift at ${new Date().toLocaleTimeString()} (Informational notice - candidate protected)`
           });
-
-          if (res.data.terminated) {
-            playErrorSound();
-            setPhase("DISQUALIFIED");
-            setErrorMessage(res.data.reason || "Contest session disqualified due to repeated AI sidebar / focus loss violations.");
-          } else {
-            playErrorSound();
-            setTabSwitchCount(res.data.switch_count || 1);
-            setViolationReasonText("FOCUS LOST / AI SIDEBAR DETECTED: You clicked outside the examination arena or opened a browser AI sidebar!");
-            setTabViolationModalOpen(true);
-          }
         } catch {}
-      }, 250);
+      }, 500);
     };
 
     window.addEventListener("blur", handleBlur);
@@ -288,35 +354,40 @@ export function ContestMobileScreen() {
       clearTimeout(blurTimer);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [phase, attemptId]);
+  }, [phase, attemptId, isOnline]);
 
   // -------------------------------------------------------------
-  // Anti-Cheat: Visibility Change (Tab / App switch detection)
+  // Anti-Cheat: Visibility Change (Deliberate tab switch only when fully online)
   // -------------------------------------------------------------
   useEffect(() => {
     if (phase !== "ARENA" || !attemptId) return;
 
     const handleVisibilityChange = async () => {
       if (document.hidden) {
+        // If offline or within 20 seconds of reconnecting, ignore tab switch
+        if (!navigator.onLine || !isOnline || (Date.now() - lastOfflineTimeRef.current < 20000)) {
+          console.log("Tab visibility change ignored due to network reconnection/offline window.");
+          return;
+        }
+
         try {
           const res = await axios.post("/api/contest/log-event", {
             attempt_id: attemptId,
             event_type: "TAB_SWITCH",
-            details: `Window hidden / app switch detected at ${new Date().toLocaleTimeString()}`
+            details: `Window hidden / deliberate tab switch detected at ${new Date().toLocaleTimeString()}`
           });
 
           if (res.data.terminated) {
             playErrorSound();
             setPhase("DISQUALIFIED");
-            setErrorMessage(res.data.reason || "Contest session disqualified due to multiple window violations.");
-          } else {
+            setErrorMessage(res.data.reason || "Exam session disqualified due to multiple tab-switching violations.");
+          } else if (res.data.switch_count) {
             playErrorSound();
-            setTabSwitchCount(res.data.switch_count || 1);
-            setViolationReasonText("WINDOW HIDDEN: You minimized or switched away from the exam tab!");
+            setTabSwitchCount(res.data.switch_count);
+            setViolationReasonText(`TAB SWITCH WARNING (${res.data.switch_count} of 3): Switching tabs away from the examination is strictly prohibited!`);
             setTabViolationModalOpen(true);
           }
-        } catch {
-        }
+        } catch {}
       }
     };
 
@@ -324,7 +395,7 @@ export function ContestMobileScreen() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [phase, attemptId]);
+  }, [phase, attemptId, isOnline]);
 
   // -------------------------------------------------------------
   // Anti-Cheat: Browser Back Button Trap
@@ -491,7 +562,18 @@ export function ContestMobileScreen() {
         playStartMissionSound();
         setAttemptId(res.data.attempt.attempt_id);
         setQuestions(res.data.questions);
-        setSelectedAnswers(res.data.attempt.answers || {});
+
+        // Check for any cached answers stored locally on this device
+        let initialAnswers = res.data.attempt.answers || {};
+        try {
+          const cachedRaw = localStorage.getItem(`nptel_answers_${res.data.attempt.attempt_id}`);
+          if (cachedRaw) {
+            const cached = JSON.parse(cachedRaw);
+            initialAnswers = { ...initialAnswers, ...cached };
+          }
+        } catch {}
+        setSelectedAnswers(initialAnswers);
+
         const rem = res.data.attempt?.expires_at
           ? Math.max(0, Math.floor((new Date(res.data.attempt.expires_at).getTime() - Date.now()) / 1000))
           : 3600;
@@ -509,7 +591,7 @@ export function ContestMobileScreen() {
   };
 
   // -------------------------------------------------------------
-  // Step 3: Save Answer for Current Question
+  // Step 3: Save Answer for Current Question (Offline Cached + Auto Synced)
   // -------------------------------------------------------------
   const handleSelectOption = async (optionId: string) => {
     if (!attemptId || phase !== "ARENA") return;
@@ -520,13 +602,27 @@ export function ContestMobileScreen() {
     const updated = { ...selectedAnswers, [currentQ.id]: optionId };
     setSelectedAnswers(updated);
 
+    // Save locally immediately so no answer is EVER lost
     try {
+      localStorage.setItem(`nptel_answers_${attemptId}`, JSON.stringify(updated));
+    } catch {}
+
+    try {
+      if (!navigator.onLine) {
+        throw new Error("Offline");
+      }
       await axios.post("/api/contest/save-answer", {
         attempt_id: attemptId,
         question_id: currentQ.id,
         option_id: optionId
       });
     } catch {
+      // Buffer in pending queue to sync upon reconnect
+      try {
+        const pending = JSON.parse(localStorage.getItem(`nptel_pending_${attemptId}`) || "{}");
+        pending[currentQ.id] = optionId;
+        localStorage.setItem(`nptel_pending_${attemptId}`, JSON.stringify(pending));
+      } catch {}
     }
   };
 
@@ -536,11 +632,13 @@ export function ContestMobileScreen() {
     if (!currentQ) return;
     playClickSound();
 
-    setSelectedAnswers((prev) => {
-      const copy = { ...prev };
-      delete copy[currentQ.id];
-      return copy;
-    });
+    const updated = { ...selectedAnswers };
+    delete updated[currentQ.id];
+    setSelectedAnswers(updated);
+
+    try {
+      localStorage.setItem(`nptel_answers_${attemptId}`, JSON.stringify(updated));
+    } catch {}
 
     setMarkedForReview((prev) => {
       const copy = { ...prev };
@@ -550,12 +648,19 @@ export function ContestMobileScreen() {
 
     if (attemptId) {
       try {
+        if (!navigator.onLine) throw new Error("Offline");
         await axios.post("/api/contest/save-answer", {
           attempt_id: attemptId,
           question_id: currentQ.id,
           option_id: ""
         });
-      } catch {}
+      } catch {
+        try {
+          const pending = JSON.parse(localStorage.getItem(`nptel_pending_${attemptId}`) || "{}");
+          pending[currentQ.id] = "";
+          localStorage.setItem(`nptel_pending_${attemptId}`, JSON.stringify(pending));
+        } catch {}
+      }
     }
   };
 
@@ -580,18 +685,31 @@ export function ContestMobileScreen() {
   };
 
   // -------------------------------------------------------------
-  // Final Manual or Auto Submit
+  // Final Manual or Auto Submit (Network Guarded)
   // -------------------------------------------------------------
   const handleFinalSubmit = async (isAutoTimeout: boolean = false) => {
     if (!attemptId) return;
+
+    if (!navigator.onLine && !isAutoTimeout) {
+      toast.error("Network is currently offline. Please reconnect to Wi-Fi / mobile data before submitting. All answers are safely saved locally on this device.", { duration: 6000 });
+      return;
+    }
+
     setSubmitConfirmOpen(false);
     setLoading(true);
 
     try {
+      // Sync any pending answers first
+      await syncPendingAnswers();
+
       const res = await axios.post("/api/contest/submit", { attempt_id: attemptId });
       if (res.data.success) {
         playCorrectSound();
         setPhase("SUBMITTED");
+        try {
+          localStorage.removeItem(`nptel_answers_${attemptId}`);
+          localStorage.removeItem(`nptel_pending_${attemptId}`);
+        } catch {}
         if (isAutoTimeout) {
           toast.error("Time Expired! Your examination has been automatically submitted.", { duration: 6000 });
         } else {
@@ -600,7 +718,7 @@ export function ContestMobileScreen() {
       }
     } catch (err: any) {
       playErrorSound();
-      toast.error(err.response?.data?.message || "Submission failed.");
+      toast.error(err.response?.data?.message || "Submission failed. Please check connection and retry.");
     } finally {
       setLoading(false);
     }
@@ -654,7 +772,7 @@ export function ContestMobileScreen() {
             <PragatiLogo variant="stacked" size="md" theme="light" subtitleText="CBT EXAMINATION PORTAL" />
             <div className="pt-2">
               <h2 className="text-xl font-black text-slate-950 uppercase tracking-tight">
-                NPTEL PRACTICE TEST 1
+                NPTEL PRACTICE TEST 2
               </h2>
               <p className="text-xs text-slate-600 font-medium">
                 40 Multiple Choice Questions · Untimed Mode
@@ -994,9 +1112,11 @@ export function ContestMobileScreen() {
     <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col justify-between select-none font-sans">
       {/* Offline banner alert */}
       {!isOnline && (
-        <div className="bg-red-600 text-white text-xs font-bold py-1.5 px-4 text-center flex items-center justify-center gap-2">
-          <WifiOff className="w-4 h-4 animate-pulse" />
-          NETWORK CONNECTION LOST — Answers will synchronize automatically when connection restores.
+        <div className="bg-amber-600 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+          <WifiOff className="w-4 h-4 animate-pulse shrink-0" />
+          <span>
+            ⚡ NETWORK OFFLINE / RECONNECTING — DO NOT PANIC. Your exam is NOT disqualified or penalized. All answers are safely preserved offline on this device and will automatically synchronize once reconnected.
+          </span>
         </div>
       )}
 
@@ -1006,7 +1126,7 @@ export function ContestMobileScreen() {
           <PragatiLogo variant="header" size="sm" subtitleText="CBT EXAMINATION SYSTEM" />
           <div className="hidden sm:block border-l border-slate-300 pl-3">
             <h1 className="text-xs font-black text-slate-900 uppercase tracking-wide">
-              NPTEL PRACTICE TEST 1: METAL ADDITIVE MANUFACTURING
+              NPTEL PRACTICE TEST 2: METAL ADDITIVE MANUFACTURING
             </h1>
             <p className="text-[11px] text-slate-500 font-medium font-mono">
               Official Examination Session · 60 Minutes Duration
@@ -1488,7 +1608,7 @@ export function ContestMobileScreen() {
                 Back to Exam
               </button>
               <button
-                onClick={handleFinalSubmit}
+                onClick={() => handleFinalSubmit(false)}
                 disabled={loading}
                 className="py-2.5 px-4 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-black uppercase shadow-sm cursor-pointer"
               >

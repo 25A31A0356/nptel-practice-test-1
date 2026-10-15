@@ -407,54 +407,130 @@ export function createApiRouter(): Router {
     res.json({ success: true, logs: contestDb.getAuditLogs() });
   });
 
+  // Host Clear All Audit Logs
+  router.delete("/host/audit-logs", requireHost, (_req, res) => {
+    const result = contestDb.clearAllAuditLogs();
+    res.json(result);
+  });
+
+  // Host Delete Single Audit Log Entry
+  router.delete("/host/audit-logs/:id", requireHost, (req, res) => {
+    const logId = req.params.id;
+    const result = contestDb.deleteAuditLog(logId);
+    res.json(result);
+  });
+
   // Host Export (CSV/JSON)
   router.get("/host/export", requireHost, (req, res) => {
     const format = req.query.format || "json";
     const data = contestDb.getHostDashboardData();
 
     if (format === "csv") {
-      const headers = [
-        "Rank",
-        "Roll Number",
-        "Student Name",
-        "Department",
-        "Year",
-        "Section",
-        "Final Score (/40)",
-        "Correct Count (/40)",
-        "Incorrect Count",
-        "Unanswered Count",
-        "Time Taken (MM:SS)",
-        "Time Taken (Seconds)",
-        "Status",
-        "Submission Timestamp"
-      ];
-      const rows = [headers.join(",")];
-      const leaderboard = contestDb.getLeaderboard(true).leaderboard;
-      for (const entry of leaderboard) {
-        rows.push(
-          [
-            entry.rank,
-            `"${entry.roll_number}"`,
-            `"${entry.student_name}"`,
-            `"${entry.department}"`,
-            `"${entry.year}"`,
-            `"${entry.section}"`,
-            entry.score,
-            entry.correct_count,
-            entry.incorrect_count,
-            entry.unanswered_count,
-            `"${entry.time_formatted}"`,
-            entry.time_taken_seconds,
-            entry.status,
-            `"${entry.submitted_at || ""}"`
-          ].join(",")
-        );
+      const exportType = (req.query.type as string) || "results";
+      let filename = "nptel_metal_additive_manufacturing_results.csv";
+      const rows: string[] = [];
+
+      if (exportType === "roster") {
+        filename = "nptel_registered_candidates_roster.csv";
+        rows.push(["Roll Number", "Student Name", "Department", "Year", "Section", "Status", "Registration Time"].join(","));
+        const regs = contestDb.getAllRegistrations();
+        for (const reg of regs) {
+          rows.push(
+            [
+              `"${reg.roll_number}"`,
+              `"${reg.student_name}"`,
+              `"${reg.department}"`,
+              `"${reg.year}"`,
+              `"${reg.section}"`,
+              `"${reg.status}"`,
+              `"${reg.registration_time || ""}"`
+            ].join(",")
+          );
+        }
+      } else if (exportType === "itemized") {
+        filename = "nptel_candidate_itemized_responses.csv";
+        rows.push(["Roll Number", "Student Name", "Question ID", "Candidate Answer", "Submission Time"].join(","));
+        const attempts = Object.values(data.attempts || {}) as any[];
+        for (const att of attempts) {
+          const answers = att.answers || {};
+          const assigned = att.assigned_question_ids || [];
+          for (const qId of assigned) {
+            rows.push(
+              [
+                `"${att.roll_number}"`,
+                `"${att.student_name}"`,
+                `"${qId}"`,
+                `"${answers[qId] || "UNANSWERED"}"`,
+                `"${att.submitted_at || ""}"`
+              ].join(",")
+            );
+          }
+        }
+      } else if (exportType === "audit" || exportType === "logs") {
+        filename = "nptel_examination_audit_event_logs.csv";
+        rows.push(["Log ID", "Timestamp", "Event Type", "Roll Number", "Attempt ID", "Details"].join(","));
+        const logs = contestDb.getAuditLogs();
+        for (const l of logs) {
+          rows.push([
+            `"${l.id}"`,
+            `"${l.timestamp}"`,
+            `"${l.event_type}"`,
+            `"${l.roll_number || ""}"`,
+            `"${l.attempt_id || ""}"`,
+            `"${String(l.details || "").replace(/"/g, '""')}"`
+          ].join(","));
+        }
+      } else {
+        // Default: Official Results Leaderboard CSV (Exact 14-column classified format matching official results)
+        filename = "nptel_metal_additive_manufacturing_results.csv";
+        const headers = [
+          "Rank",
+          "Roll Number",
+          "Student Name",
+          "Department",
+          "Year",
+          "Section",
+          "Final Score (/40)",
+          "Correct Count (/40)",
+          "Incorrect Count",
+          "Unanswered Count",
+          "Time Taken (MM:SS)",
+          "Time Taken (Seconds)",
+          "Status",
+          "Submission Timestamp"
+        ];
+        rows.push(headers.join(","));
+
+        const leaderboard = contestDb.getLeaderboard(true).leaderboard;
+        const seenRolls = new Set<string>();
+
+        for (const entry of leaderboard) {
+          seenRolls.add(entry.roll_number.toUpperCase());
+          rows.push(
+            [
+              entry.rank,
+              `"${entry.roll_number}"`,
+              `"${entry.student_name}"`,
+              `"${entry.department}"`,
+              `"${entry.year}"`,
+              `"${entry.section}"`,
+              entry.score,
+              entry.correct_count,
+              entry.incorrect_count,
+              entry.unanswered_count,
+              `"${entry.time_formatted}"`,
+              entry.time_taken_seconds,
+              entry.status,
+              `"${entry.submitted_at || ""}"`
+            ].join(",")
+          );
+        }
       }
 
-      res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", 'attachment; filename="nptel_practice_test_1_scores.csv"');
-      res.send(rows.join("\n"));
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      // \uFEFF is the UTF-8 BOM so Microsoft Excel cleanly auto-formats all columns without encoding issues
+      res.send("\uFEFF" + rows.join("\r\n"));
       return;
     }
 

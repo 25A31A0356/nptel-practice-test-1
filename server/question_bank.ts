@@ -1,453 +1,40 @@
 import { QuestionDef } from "@shared/types";
 
 // =========================================================================================
-// NPTEL PRACTICE TEST 1 — METAL ADDITIVE MANUFACTURING (2026)
-// Complete 60-Question Official Examination Question Bank 
+// NPTEL PRACTICE TEST — METAL ADDITIVE MANUFACTURING (2026)
+// Complete 6 Question Papers (Week-07 through Week-12)
+// Total 52 Questions with Official Solutions & Answers
 // =========================================================================================
 
 export function generateQuestionBank(): QuestionDef[] {
   return [
-    // ==========================================
-    
-    // ==========================================
+    // =========================================================================
+    // QUESTION PAPER 1: ASSIGNMENT WEEK-07 (2026)
+    // =========================================================================
     {
-      id: "MAM_W01_Q01",
+      id: "MAM_W07_Q01",
       number: 1,
-      topic: "Additive Manufacturing Fundamentals",
+      topic: "In-Process Monitoring & Measurement",
       points: 1,
       difficulty: "EASY",
-      title: "Capillary Number Representation",
-      description: "What does the capillary number (Ca) represent?",
+      title: "On-Machine Measurement Definition",
+      description: "What does ‘on-machine measurement’ refer to?",
       options: [
-        { id: "A", text: "Relative effect of temperature on viscosity" },
-        { id: "B", text: "Relative effect of viscous drag forces versus surface tension forces" },
-        { id: "C", text: "Relative effect of pressure on interfacial tension" },
-        { id: "D", text: "Relative effect of density on fluid velocity" }
+        { id: "A", text: "Measurement of parts before processing" },
+        { id: "B", text: "Measurement of parts after processing" },
+        { id: "C", text: "Measurement of parts during processing" },
+        { id: "D", text: "Measurement of parts in storage" }
       ],
-      correct_option_id: "B"
+      correct_option_id: "C"
     },
     {
-      id: "MAM_W01_Q02",
+      id: "MAM_W07_Q02",
       number: 2,
-      topic: "Additive Manufacturing Fundamentals",
+      topic: "Pyrometry & Thermal Sensing",
       points: 1,
       difficulty: "EASY",
-      title: "Layer Marks Phenomenon",
-      description: "___________ phenomenon is associated with 3D printing when layer marks become distinctly visible on the surface of parts?",
-      options: [
-        { id: "A", text: "Staircase descent" },
-        { id: "B", text: "Layer degradation" },
-        { id: "C", text: "Staircase effect" },
-        { id: "D", text: "Print layering" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W01_Q03",
-      number: 3,
-      topic: "Manufacturing Systems & Customization",
-      points: 1,
-      difficulty: "EASY",
-      title: "Mass Customization in Production",
-      description: "___________ based products can be produced according to the tastes of an individual consumer with the help of flexible manufacturing system and computer-based information but at a cost-effective, price.",
-      options: [
-        { id: "A", text: "Customization" },
-        { id: "B", text: "Mass customization" },
-        { id: "C", text: "Group technology" },
-        { id: "D", text: "Flexible manufacturing system" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W01_Q04",
-      number: 4,
-      topic: "Materials & Automotive Applications",
-      points: 1,
-      difficulty: "EASY",
-      title: "DS3 Titanium Door Handle Material",
-      description: "The custom titanium door handle frame in DS3 Dark Side edition from DS Automobile is made of plastic.",
-      options: [
-        { id: "A", text: "True" },
-        { id: "B", text: "False" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W01_Q05",
-      number: 5,
-      topic: "Heat Transfer Fundamentals",
-      points: 1,
-      difficulty: "EASY",
-      title: "Fourier's Law Heat Transfer",
-      description: "Fourier's Law states that the time rate of heat transfer through a material is inversely proportional to the temperature gradient.",
-      options: [
-        { id: "A", text: "True" },
-        { id: "B", text: "False" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W01_Q06",
-      number: 6,
-      topic: "CAD / CAM Software in AM",
-      points: 1,
-      difficulty: "EASY",
-      title: "3D Design Software for AM",
-      description: "Which software tool is commonly used for 3D design of parts that need to be printed?",
-      options: [
-        { id: "A", text: "CAD/CAM software" },
-        { id: "B", text: "Spreadsheet software" },
-        { id: "C", text: "Graphic design software" },
-        { id: "D", text: "Database management software" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W01_Q07",
-      number: 7,
-      topic: "Additive Manufacturing Definition",
-      points: 1,
-      difficulty: "EASY",
-      title: "Additive Manufacturing Definition",
-      description: "Additive manufacturing (AM), often known as 3D printing, is:",
-      options: [
-        { id: "A", text: "Mass production" },
-        { id: "B", text: "Layer-by-layer fabrication" },
-        { id: "C", text: "Casting techniques" },
-        { id: "D", text: "Machining processes" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W01_Q08",
-      number: 8,
-      topic: "Material Retention Processes",
-      points: 1,
-      difficulty: "EASY",
-      title: "Material Retention Process",
-      description: "____________ is the process of one material being retained by another.",
-      options: [
-        { id: "A", text: "Fusion" },
-        { id: "B", text: "Absorption" },
-        { id: "C", text: "Oxidation" },
-        { id: "D", text: "Sublimation" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W01_Q09",
-      number: 9,
-      topic: "Process Monitoring & Sensors",
-      points: 1,
-      difficulty: "EASY",
-      title: "Photodiode Sensing in Metal AM",
-      description: "What do photodiodes primarily sense in metal AM processes?",
-      options: [
-        { id: "A", text: "Mechanical vibrations" },
-        { id: "B", text: "Thermal radiation and light emission" },
-        { id: "C", text: "Electrical conductivity" },
-        { id: "D", text: "Pressure changes" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W01_Q10",
-      number: 10,
-      topic: "Sheet Lamination Process",
-      points: 1,
-      difficulty: "EASY",
-      title: "Sheet Lamination Process",
-      description: "Sheet lamination is an additive manufacturing process that bonds sheets to make an object.",
-      options: [
-        { id: "A", text: "True" },
-        { id: "B", text: "False" }
-      ],
-      correct_option_id: "A"
-    },
-
-    // ==========================================
-    
-    // ==========================================
-    {
-      id: "MAM_W02_Q01",
-      number: 11,
-      topic: "File Formats in AM",
-      points: 1,
-      difficulty: "EASY",
-      title: "STL Full Form in AM",
-      description: "What does STL stand for in additive manufacturing?",
-      options: [
-        { id: "A", text: "Standard tool layer" },
-        { id: "B", text: "Solid triangular lattice" },
-        { id: "C", text: "Stereolithography" },
-        { id: "D", text: "None of these" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W02_Q02",
-      number: 12,
-      topic: "Material Extrusion & Bioprinters",
-      points: 1,
-      difficulty: "EASY",
-      title: "Material Extrusion Scope",
-      description: "Material Extrusion approaches range from a single syringe attached to an XYZ gantry system distributing ingredients using compressed gas back pressure to:",
-      options: [
-        { id: "A", text: "Digital Light Processing (DLP)" },
-        { id: "B", text: "Continuous Liquid Interface Production (CLIP)" },
-        { id: "C", text: "Bioprinters" },
-        { id: "D", text: "Selective Laser Melting (SLM)" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W02_Q03",
-      number: 13,
-      topic: "Material Jetting Printheads",
-      points: 1,
-      difficulty: "EASY",
-      title: "Material Jetting Printhead Characteristics",
-      description: "Material Jetting printheads deposit material quickly with hundreds to thousands of nozzles.",
-      options: [
-        { id: "A", text: "True" },
-        { id: "B", text: "False" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W02_Q04",
-      number: 14,
-      topic: "Geometric Topologies in CAD",
-      points: 1,
-      difficulty: "EASY",
-      title: "Non-Manifold Geometric Topologies",
-      description: "What term describes geometric topologies allowing disjoint lumps to exist in their own logical body?",
-      options: [
-        { id: "A", text: "Non-linear geometries" },
-        { id: "B", text: "Non-manifold geometries" },
-        { id: "C", text: "Non-Euclidean geometries" },
-        { id: "D", text: "Non-planar geometries" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W02_Q05",
-      number: 15,
-      topic: "Binder Jetting Technology",
-      points: 1,
-      difficulty: "EASY",
-      title: "Binders in Binder Jetting",
-      description: "Binders in Binder Jetting technology can treat metals that cannot be __________ processed.",
-      options: [
-        { id: "A", text: "chemically" },
-        { id: "B", text: "thermally" },
-        { id: "C", text: "mechanically" },
-        { id: "D", text: "electrically" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W02_Q06",
-      number: 16,
-      topic: "Data Management in AM Files",
-      points: 1,
-      difficulty: "EASY",
-      title: "Efficiency Principle in AM Files",
-      description: "Which principle ensures that the same information is not stored in multiple places in the file?",
-      options: [
-        { id: "A", text: "Simplicity" },
-        { id: "B", text: "Extensibility" },
-        { id: "C", text: "Efficiency" },
-        { id: "D", text: "Redundancy" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W02_Q07",
-      number: 17,
-      topic: "Commercial Material Jetting Systems",
-      points: 1,
-      difficulty: "EASY",
-      title: "High-End Colored MJ Providers",
-      description: "____________ and 3D Systems provide high-end MJ systems that can print colored items.",
-      options: [
-        { id: "A", text: "XJET" },
-        { id: "B", text: "Stratasys" },
-        { id: "C", text: "Nanoparticle Jetting Inc" },
-        { id: "D", text: "3D Systems" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W02_Q08",
-      number: 18,
-      topic: "Preprocessing in AM Pipelines",
-      points: 1,
-      difficulty: "EASY",
-      title: "CAD Preprocessing Requirement",
-      description: "CAD models used in AM are directly converted into machine-readable files without any preprocessing.",
-      options: [
-        { id: "A", text: "True" },
-        { id: "B", text: "False" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W02_Q09",
-      number: 19,
-      topic: "HP Metal Jet Technology",
-      points: 1,
-      difficulty: "EASY",
-      title: "HP Metal Jet Binder Jetting Enhancements",
-      description: "HP's metal jet technology aims to improve Binder Jetting (BJ) by enhancing printing sharp corners and well-defined edges majorly through:",
-      options: [
-        { id: "A", text: "Reducing porosity" },
-        { id: "B", text: "Increasing surface roughness" },
-        { id: "C", text: "Improving dimensional accuracy" },
-        { id: "D", text: "Decreasing surface polish" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W02_Q10",
-      number: 20,
-      topic: "PBF System Dimensions",
-      points: 1,
-      difficulty: "EASY",
-      title: "Maximum Height Limit in PBF Systems",
-      description: "PBF systems are currently limited to a maximum height of __________, as mentioned in the lecture.",
-      options: [
-        { id: "A", text: "1000 mm" },
-        { id: "B", text: "800 mm" },
-        { id: "C", text: "500 mm" },
-        { id: "D", text: "1200 mm" }
-      ],
-      correct_option_id: "C"
-    },
-
-    // ==========================================
-    
-    // ==========================================
-    {
-      id: "MAM_W03_Q01",
-      number: 21,
-      topic: "Laser Systems & Lasers in AM",
-      points: 1,
-      difficulty: "EASY",
-      title: "High Pressure Gas Laser Types",
-      description: "Which type of lasers uses gas at 1 atm or higher and parallel electrodes?",
-      options: [
-        { id: "A", text: "CO2 laser" },
-        { id: "B", text: "Fiber laser" },
-        { id: "C", text: "Semiconductor laser" },
-        { id: "D", text: "Solid-state laser" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W03_Q02",
-      number: 22,
-      topic: "Laser Physics & Population Inversion",
-      points: 1,
-      difficulty: "EASY",
-      title: "Population Inversion Mechanism",
-      description: "Which component of the laser system is responsible for creating population inversion?",
-      options: [
-        { id: "A", text: "Gain medium" },
-        { id: "B", text: "Pumping source" },
-        { id: "C", text: "Resonant optical cavity" },
-        { id: "D", text: "Mirrors" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W03_Q03",
-      number: 23,
-      topic: "Laser Acronym Definition",
-      points: 1,
-      difficulty: "EASY",
-      title: "Full Form of LASER",
-      description: "“LASER” stands for _________.",
-      options: [
-        { id: "A", text: "Light Amplified by Stimulated Emission of Radiation" },
-        { id: "B", text: "Light Amplification by Stimulated Emitted of Radiation" },
-        { id: "C", text: "Light Amplification by Stimulated Emission of Radiation" },
-        { id: "D", text: "Light Amplified by Stimulating Emission of Radiation" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W03_Q04",
-      number: 24,
-      topic: "Stimulated Emission & Amplification",
-      points: 1,
-      difficulty: "EASY",
-      title: "Condition for Light Amplification",
-      description: "In order for stimulated emission to produce a laser beam or amplify light, what condition must be met regarding the rates of emission and absorption?",
-      options: [
-        { id: "A", text: "Stimulated emission rate must be lower than absorption rate" },
-        { id: "B", text: "Stimulated emission rate must be equal to absorption rate" },
-        { id: "C", text: "Stimulated emission rate must be higher than absorption rate" },
-        { id: "D", text: "Absorption rate must be higher than stimulated emission rate" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W03_Q05",
-      number: 25,
-      topic: "Laser Beam Transverse Modes",
-      points: 1,
-      difficulty: "EASY",
-      title: "Transverse Modes in Laser Beams",
-      description: "The transverse modes superimposed on a laser beam are known as:",
-      options: [
-        { id: "A", text: "Parallel modes" },
-        { id: "B", text: "TEM modes" },
-        { id: "C", text: "Longitudinal modes" },
-        { id: "D", text: "Coherent modes" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W03_Q06",
-      number: 26,
-      topic: "Atomic Energy Levels",
-      points: 1,
-      difficulty: "EASY",
-      title: "Atomic Energy States E1 and E2",
-      description: "In the given atomic system, what best describe E1 and E2?",
-      options: [
-        { id: "A", text: "E1 is the excited state, and E2 is the ground state" },
-        { id: "B", text: "E1 is the energy level of electrons, and E2 is the energy level of atoms" },
-        { id: "C", text: "E1 is the ground state, and E2 is the excited state" },
-        { id: "D", text: "E1 and E2 represent different polarization states" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W03_Q07",
-      number: 27,
-      topic: "Electron Beam Powder Bed Fusion (EPBF)",
-      points: 1,
-      difficulty: "EASY",
-      title: "Electron Beam Energy in EPBF",
-      description: "The _________ of the beam electrons heats the metal powder in EPBF.",
-      options: [
-        { id: "A", text: "kinetic energy" },
-        { id: "B", text: "potential energy" },
-        { id: "C", text: "both of these" },
-        { id: "D", text: "none of these" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W03_Q08",
-      number: 28,
-      topic: "Electron Optics & Stigmator",
-      points: 1,
-      difficulty: "EASY",
-      title: "Stigmator Solenoid Configuration",
-      description: "In the explained Electron Beam Mechanism, how many solenoids with magnetic quadruples make up a stigmator?",
+      title: "Two-Colour Pyrometer Wavelength Filters",
+      description: "In a two-colour pyrometer, how many wavelength filters are used in the sandwich detector?",
       options: [
         { id: "A", text: "One" },
         { id: "B", text: "Two" },
@@ -457,261 +44,59 @@ export function generateQuestionBank(): QuestionDef[] {
       correct_option_id: "B"
     },
     {
-      id: "MAM_W03_Q09",
-      number: 29,
-      topic: "Fiber Lasers & Optical Cladding",
+      id: "MAM_W07_Q03",
+      number: 3,
+      topic: "Defect Correlation & CT Inspections",
       points: 1,
       difficulty: "EASY",
-      title: "Pumping Light Absorption in Fiber Lasers",
-      description: "In fiber optic lasers, the _______ absorbs pumping light each time the beam passes through.",
+      title: "In-Process Defects vs Post-Process Inspection Flaws",
+      description: "The relationship between in-process defects and flaws found by post-process inspections, such as X-ray computed tomography, is _______.",
       options: [
-        { id: "A", text: "cladding" },
-        { id: "B", text: "core" },
-        { id: "C", text: "diode laser pump" },
-        { id: "D", text: "None of these" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W03_Q10",
-      number: 30,
-      topic: "Laser Medium Excitation Methods",
-      points: 1,
-      difficulty: "EASY",
-      title: "Electrical Excitation Approach",
-      description: "The laser medium's excitation by an intense electrical discharge (i.e., non-radiative) is known as the:",
-      options: [
-        { id: "A", text: "Electrical excitation approach" },
-        { id: "B", text: "Optical pumping approach" },
-        { id: "C", text: "Chemical excitation approach" },
-        { id: "D", text: "Thermal excitation approach" }
-      ],
-      correct_option_id: "A"
-    },
-
-    // ==========================================
-    
-    // ==========================================
-    {
-      id: "MAM_W04_Q01",
-      number: 31,
-      topic: "Laser Directed Energy Deposition (LDED)",
-      points: 1,
-      difficulty: "EASY",
-      title: "Powder Interaction Factors in LDED",
-      description: "What factors impact the interactions of powder particles during LDED (powder-fed AM)?",
-      options: [
-        { id: "A", text: "Laser intensity and frequency" },
-        { id: "B", text: "Nozzle type, angle between powder delivery system, and powder stream diameter" },
-        { id: "C", text: "Ambient temperature and humidity" },
-        { id: "D", text: "Substrate material composition" }
+        { id: "A", text: "well-established" },
+        { id: "B", text: "still unclear" },
+        { id: "C", text: "negligible" },
+        { id: "D", text: "irrelevant" }
       ],
       correct_option_id: "B"
     },
     {
-      id: "MAM_W04_Q02",
-      number: 32,
-      topic: "Microstructure & Segregation",
+      id: "MAM_W07_Q04",
+      number: 4,
+      topic: "Process Signatures in AM",
       points: 1,
       difficulty: "EASY",
-      title: "Reducing Dendritic Segregation",
-      description: "What is a key factor in reducing dendritic segregation in Additive Manufacturing (AM)?",
+      title: "Process Signatures Observation Levels",
+      description: "Relevant process signatures are divided into different observation levels based on their color and shape.",
       options: [
-        { id: "A", text: "Achieving compositional homogeneity" },
-        { id: "B", text: "Increasing grain size and distribution" },
-        { id: "C", text: "Enhancing fluid flow and mass transfer" },
-        { id: "D", text: "Introducing phase transformation" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W04_Q03",
-      number: 33,
-      topic: "Laser Powder Bed Fusion (LPBF) Hardware",
-      points: 1,
-      difficulty: "EASY",
-      title: "Galvanometer Scanner Function in LPBF",
-      description: "What is the function of galvanometer scanners in Laser Powder Bed Fusion (LPBF)?",
-      options: [
-        { id: "A", text: "They control the temperature of the laser beam" },
-        { id: "B", text: "They perform x and y laser scanning" },
-        { id: "C", text: "They regulate the powder flow rate" },
-        { id: "D", text: "They adjust the laser intensity" }
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
       ],
       correct_option_id: "B"
     },
     {
-      id: "MAM_W04_Q04",
-      number: 34,
-      topic: "Directed Energy Deposition (DED) Equipment",
+      id: "MAM_W07_Q05",
+      number: 5,
+      topic: "Thermography Spectral Bands",
       points: 1,
       difficulty: "EASY",
-      title: "Essential Powder Delivery Equipment in DED",
-      description: "Which equipment is essential for the delivery and deposition of powders in a DED process?",
+      title: "Spectral Bands for Thermography",
+      description: "____________are the most common and appropriate spectral bands used for thermography?",
       options: [
-        { id: "A", text: "Powder mixers" },
-        { id: "B", text: "Powder feeders and delivery nozzles" },
-        { id: "C", text: "Cooling chambers" },
-        { id: "D", text: "Laser systems" }
+        { id: "A", text: "Short and long infrared ranges" },
+        { id: "B", text: "Medium and long infrared ranges" },
+        { id: "C", text: "Near and far infrared ranges" },
+        { id: "D", text: "Ultraviolet and infrared ranges" }
       ],
       correct_option_id: "B"
     },
     {
-      id: "MAM_W04_Q05",
-      number: 35,
-      topic: "Solidification & Phase Diagrams",
+      id: "MAM_W07_Q06",
+      number: 6,
+      topic: "Blackbody Radiation Laws",
       points: 1,
       difficulty: "EASY",
-      title: "Mushy Zone Temperature Range",
-      description: "At what temperature range does the mushy zone typically occur in metal alloys?",
-      options: [
-        { id: "A", text: "Below the solidus temperature" },
-        { id: "B", text: "Between the solidus and liquidus temperatures" },
-        { id: "C", text: "Above the liquidus temperature" },
-        { id: "D", text: "At the eutectic temperature" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W04_Q06",
-      number: 36,
-      topic: "Thermal Cycling & Grain Morphology",
-      points: 1,
-      difficulty: "EASY",
-      title: "Grain Morphology Control in Deposited Layers",
-      description: "Which factor controls the early phase distribution and grain morphology of the deposited layer in additive manufacturing?",
-      options: [
-        { id: "A", text: "Thermal cycling and cooling" },
-        { id: "B", text: "Heat source speed" },
-        { id: "C", text: "Cooling to ambient temperature" },
-        { id: "D", text: "Heat transfer mechanisms" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W04_Q07",
-      number: 37,
-      topic: "Wire-Feed DED Challenges",
-      points: 1,
-      difficulty: "EASY",
-      title: "Wire-Feed Process Limitations in DED",
-      description: "What challenge arises when achieving complex geometries with wire-feed processes in DED AM?",
-      options: [
-        { id: "A", text: "Low deposition rates" },
-        { id: "B", text: "High porosity of parts" },
-        { id: "C", text: "Difficulty controlling process parameters" },
-        { id: "D", text: "Inability to obtain high geometry accuracy and low porosity simultaneously" }
-      ],
-      correct_option_id: "D"
-    },
-    {
-      id: "MAM_W04_Q08",
-      number: 38,
-      topic: "Rapid Solidification Microstructures",
-      points: 1,
-      difficulty: "EASY",
-      title: "Fast Cooling Microstructure Formation",
-      description: "At fast cooling rates in AM, what type of structure forms?",
-      options: [
-        { id: "A", text: "Ferrite" },
-        { id: "B", text: "Martensitic" },
-        { id: "C", text: "Pearlite" },
-        { id: "D", text: "Bainite" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W04_Q09",
-      number: 39,
-      topic: "Gravity Powder Feeders",
-      points: 1,
-      difficulty: "EASY",
-      title: "High Precision Gravity Feeders",
-      description: "What external components can be added to gravity feeders for achieving high precision feed rates?",
-      options: [
-        { id: "A", text: "Laser sensors" },
-        { id: "B", text: "Temperature controllers" },
-        { id: "C", text: "Metering wheels and lobe gears" },
-        { id: "D", text: "Cooling chambers" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W04_Q10",
-      number: 40,
-      topic: "Controlled Solidification Protocols",
-      points: 1,
-      difficulty: "EASY",
-      title: "Controlled Solidification Significance",
-      description: "What is the one of the major significances of controlled solidification protocol in casting a large ingot of metal alloy into a single crystal?",
-      options: [
-        { id: "A", text: "It ensures the alloy remains in liquid state throughout the process" },
-        { id: "B", text: "It prevents solidification of the alloy" },
-        { id: "C", text: "It facilitates transformation of a homogeneous liquid into a perfect homogeneous solid" },
-        { id: "D", text: "It accelerates the cooling process to reduce production time" }
-      ],
-      correct_option_id: "C"
-    },
-
-    // ==========================================
-    
-    // ==========================================
-    {
-      id: "MAM_W05_Q01",
-      number: 41,
-      topic: "AM Microstructure & Properties",
-      points: 1,
-      difficulty: "EASY",
-      title: "AM Microstructure Anisotropy",
-      description: "What type of microstructure do AM-processed products generally have?",
-      options: [
-        { id: "A", text: "Isotropic" },
-        { id: "B", text: "Transparent" },
-        { id: "C", text: "Anisotropic" },
-        { id: "D", text: "Porous" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W05_Q02",
-      number: 42,
-      topic: "Cladding & Dilution Equations",
-      points: 1,
-      difficulty: "EASY",
-      title: "Dilution Equation Parameter Xs",
-      description: "In the dilution equation provided, what does Xs represent?",
-      options: [
-        { id: "A", text: "The density of melted powder alloy" },
-        { id: "B", text: "The density of the substrate material" },
-        { id: "C", text: "The weight percentage of an element in the total surface of the clad region" },
-        { id: "D", text: "The weight percentage of an element in the substrate" }
-      ],
-      correct_option_id: "D"
-    },
-    {
-      id: "MAM_W05_Q03",
-      number: 43,
-      topic: "Porosity & Defects in AM",
-      points: 1,
-      difficulty: "EASY",
-      title: "Pores from Excessive Energy Input",
-      description: "What type of pores are characterized by an inefficient melting regime and excessive energy input during processing?",
-      options: [
-        { id: "A", text: "Elongated, non-spherical pores" },
-        { id: "B", text: "Gas pores" },
-        { id: "C", text: "Spherical pores" },
-        { id: "D", text: "Non-defective pores" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W05_Q04",
-      number: 44,
-      topic: "Thermal Gradients & Cracking",
-      points: 1,
-      difficulty: "EASY",
-      title: "Powder Bed Temperature Gradient & Cracks",
-      description: "A high powder bed temperature gradient can initiate and accelerate crack formation.",
+      title: "Planck's Law of Radiation",
+      description: "Planck's law tells us how the intensity of electromagnetic radiation emitted by a blackbody, varies across its spectrum.",
       options: [
         { id: "A", text: "True" },
         { id: "B", text: "False" }
@@ -719,262 +104,744 @@ export function generateQuestionBank(): QuestionDef[] {
       correct_option_id: "A"
     },
     {
-      id: "MAM_W05_Q05",
-      number: 45,
-      topic: "Cyclic Softening in Alloys",
+      id: "MAM_W07_Q07",
+      number: 7,
+      topic: "Infrared Sensor Calibration",
       points: 1,
       difficulty: "EASY",
-      title: "Cyclic Softening Behavior",
-      description: "Which type of alloy shows less cyclic softening, according to the provided information?",
+      title: "Small Wavelength IR Sensor Calibration Limit",
+      description: "Small Wavelength infrared sensors are sensitive, but they can't be calibrated below:",
       options: [
-        { id: "A", text: "Wrought alloys" },
-        { id: "B", text: "AM-manufactured alloys" },
-        { id: "C", text: "Both show similar cyclic softening" },
-        { id: "D", text: "Neither show cyclic softening" }
+        { id: "A", text: "250 °C" },
+        { id: "B", text: "350 °C" },
+        { id: "C", text: "20 °C" },
+        { id: "D", text: "0 °C" }
       ],
       correct_option_id: "B"
     },
     {
-      id: "MAM_W05_Q06",
-      number: 46,
-      topic: "Post-Processing Operations",
+      id: "MAM_W07_Q08",
+      number: 8,
+      topic: "Thermal Radiance Components",
       points: 1,
       difficulty: "EASY",
-      title: "De-powdering and Support Removal Category",
-      description: "Which category of post-processing involves activities like de-powdering and support removal?",
+      title: "Radiance Components for Real Bodies",
+      description: "Which of the following is not a component of radiance for real bodies?",
       options: [
-        { id: "A", text: "Mechanical properties" },
-        { id: "B", text: "Visual inspection" },
-        { id: "C", text: "Process-inherent process" },
-        { id: "D", text: "Surface treatment" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W05_Q07",
-      number: 47,
-      topic: "Process Parameters in AM",
-      points: 1,
-      difficulty: "EASY",
-      title: "Ambient Parameters in AM",
-      description: "Which factor is typically constant and falls under the category of ‘Ambient’ parameters?",
-      options: [
-        { id: "A", text: "Beam power" },
-        { id: "B", text: "Layer thickness" },
-        { id: "C", text: "Shield gas type" },
-        { id: "D", text: "Maximum velocity" }
-      ],
-      correct_option_id: "C"
-    },
-    {
-      id: "MAM_W05_Q08",
-      number: 48,
-      topic: "Titanium Alloys in AM",
-      points: 1,
-      difficulty: "EASY",
-      title: "Extensively Studied Titanium Alloy",
-      description: "Which Ti alloy is the most extensively studied in Additive Manufacturing (AM)?",
-      options: [
-        { id: "A", text: "Ti-6Al-4V" },
-        { id: "B", text: "Ti-5Al-2.5Sn" },
-        { id: "C", text: "Ti-6Al-2Sn-4Zr-2Mo" },
-        { id: "D", text: "Ti-3Al-2.5V" }
+        { id: "A", text: "Absorption" },
+        { id: "B", text: "Transmission" },
+        { id: "C", text: "Reflection" },
+        { id: "D", text: "Emissivity" }
       ],
       correct_option_id: "A"
     },
     {
-      id: "MAM_W05_Q09",
-      number: 49,
-      topic: "Energy Density & Volumetric Energy",
+      id: "MAM_W07_Q09",
+      number: 9,
+      topic: "Pyrometer Technology",
       points: 1,
       difficulty: "EASY",
-      title: "Specific Energy Measurement",
-      description: "What does the specific energy measure?",
+      title: "Dual-Wavelength Pyrometer Capabilities",
+      description: "Dual-wavelength pyrometers allow for independent selection and combination of wavelengths.",
       options: [
-        { id: "A", text: "The amount of thermal energy received by each unit of volume" },
-        { id: "B", text: "Input energy from the surface irradiated by the laser beam" },
-        { id: "C", text: "The scanning speed of the laser" },
-        { id: "D", text: "The layer thickness of the material" }
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
       ],
-      correct_option_id: "B"
+      correct_option_id: "A"
     },
     {
-      id: "MAM_W05_Q10",
-      number: 50,
-      topic: "Industrial Challenges in AM",
+      id: "MAM_W07_Q10",
+      number: 10,
+      topic: "Sensing Architectures in AM",
       points: 1,
       difficulty: "EASY",
-      title: "Reproducibility Challenge in AM",
-      description: "What is a difficulty faced by the AM industry in obtaining reproducible qualities?",
+      title: "Co-Axial Sensing Architectures Process Application",
+      description: "In which type of additive manufacturing process can co-axial sensing architectures be used?",
       options: [
-        { id: "A", text: "Obtaining consistent hardness" },
-        { id: "B", text: "Achieving uniform surface roughness" },
-        { id: "C", text: "Ensuring geometrical integrity" },
-        { id: "D", text: "Reproducing density accurately" }
+        { id: "A", text: "Laser Powder Bed Fusion (L-PBF)" },
+        { id: "B", text: "Electron Beam Powder Bed Fusion (EB-PBF)" },
+        { id: "C", text: "Selective Laser Melting (SLM)" },
+        { id: "D", text: "Fused Deposition Modeling (FDM)" }
       ],
-      correct_option_id: "C"
+      correct_option_id: "A"
     },
 
-    // ==========================================
-    
-    // ==========================================
+    // =========================================================================
+    // QUESTION PAPER 2: ASSIGNMENT WEEK-08 (2026)
+    // =========================================================================
     {
-      id: "MAM_W06_Q01",
-      number: 51,
-      topic: "Design for Additive Manufacturing (DfAM)",
+      id: "MAM_W08_Q01",
+      number: 11,
+      topic: "Titanium Matrix Composites",
       points: 1,
       difficulty: "EASY",
-      title: "F-1 Cylinder Weight Reduction by DfAM",
-      description: "Which company in the U.S. successfully achieved an 80% weight reduction in the F-1 automobile cylinder using DfAM technology?",
+      title: "Hardening Element for Ti Matrix Composites",
+      description: "Which element contributes to the hardening of Titanium matrix composites alongside TiB whiskers?",
       options: [
-        { id: "A", text: "Toyota" },
-        { id: "B", text: "Local Motors" },
-        { id: "C", text: "FIT WEST" },
-        { id: "D", text: "None of the above" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W06_Q02",
-      number: 52,
-      topic: "Structural Optimization & Compliance",
-      points: 1,
-      difficulty: "EASY",
-      title: "Augmented Compliance Response Equation Form",
-      description: "What form is the governing equation added in to create the augmented compliance response?",
-      options: [
-        { id: "A", text: "First order" },
-        { id: "B", text: "Second order" },
-        { id: "C", text: "Zero form" },
-        { id: "D", text: "Differential form" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W06_Q03",
-      number: 53,
-      topic: "Restrictive DfAM & Skin Models",
-      points: 1,
-      difficulty: "EASY",
-      title: "Restrictive DfAM Geometric Models",
-      description: "Restrictive DfAM methods aim to bridge the gap between the __________ geometric model and the skin model.",
-      options: [
-        { id: "A", text: "nominal" },
-        { id: "B", text: "ideal" },
-        { id: "C", text: "faulty" },
-        { id: "D", text: "imperfect" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W06_Q04",
-      number: 54,
-      topic: "Traditional vs Additive Manufacturing Thinking",
-      points: 1,
-      difficulty: "EASY",
-      title: "Traditional Manufacturing Mindset",
-      description: "Most engineers think ______ because traditional manufacturing usually involves taking a block of material and taking stuff out of it.",
-      options: [
-        { id: "A", text: "additively" },
-        { id: "B", text: "subtractively" },
-        { id: "C", text: "multiplicatively" },
-        { id: "D", text: "cumulatively" }
-      ],
-      correct_option_id: "B"
-    },
-    {
-      id: "MAM_W06_Q05",
-      number: 55,
-      topic: "Material Thermal Properties in Design",
-      points: 1,
-      difficulty: "EASY",
-      title: "Thermal Properties & Layer Time Limitations",
-      description: "The thermal properties of a material dictate __________ and some aspects of design.",
-      options: [
-        { id: "A", text: "layer time limitations" },
-        { id: "B", text: "thermal conductivity" },
-        { id: "C", text: "mechanical strength" },
-        { id: "D", text: "electrical resistance" }
-      ],
-      correct_option_id: "A"
-    },
-    {
-      id: "MAM_W06_Q06",
-      number: 56,
-      topic: "FDM Slicing & Toolpaths",
-      points: 1,
-      difficulty: "EASY",
-      title: "FDM Infill & Raster Fill",
-      description: "When printing with FDM technology, most printers will, by default, print one or two edges around the hole and then __________ the other areas.",
-      options: [
-        { id: "A", text: "solidify" },
-        { id: "B", text: "reinforce" },
-        { id: "C", text: "raster fill" },
-        { id: "D", text: "smooth" }
+        { id: "A", text: "Nitrogen" },
+        { id: "B", text: "Oxygen" },
+        { id: "C", text: "Carbon" },
+        { id: "D", text: "Aluminum" }
       ],
       correct_option_id: "C"
     },
     {
-      id: "MAM_W06_Q07",
-      number: 57,
-      topic: "Design Freedom in AM",
+      id: "MAM_W08_Q02",
+      number: 12,
+      topic: "Composite Densification",
       points: 1,
       difficulty: "EASY",
-      title: "Additive Manufacturing Design Freedom",
-      description: "Additive manufacturing contributes significantly to industries with __________ freedom.",
+      title: "Fe2O3 Content and Densification",
+      description: "The higher content of Fe2O3 negatively affects the densification property of the composites.",
       options: [
-        { id: "A", text: "structural" },
-        { id: "B", text: "design" },
-        { id: "C", text: "mechanical" },
-        { id: "D", text: "material" }
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
       ],
       correct_option_id: "B"
     },
     {
-      id: "MAM_W06_Q08",
-      number: 58,
-      topic: "Lattice Structures & Topology Optimization",
+      id: "MAM_W08_Q03",
+      number: 13,
+      topic: "Solidification Defects",
       points: 1,
       difficulty: "EASY",
-      title: "Lattice Beam Optimization",
-      description: "The _____ beam uses lattices to reduce the volume of the load-bearing design space.",
+      title: "Solidification Rate and Pore Formation",
+      description: "Faster solidification of liquid melts causes partial filling of gaps in the melted area, causing pores.",
       options: [
-        { id: "A", text: "yellow" },
-        { id: "B", text: "green" },
-        { id: "C", text: "red" },
-        { id: "D", text: "blue" }
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
       ],
-      correct_option_id: "B"
+      correct_option_id: "A"
     },
     {
-      id: "MAM_W06_Q09",
-      number: 59,
-      topic: "Overhangs, Bridges & Supports in DfAM",
+      id: "MAM_W08_Q04",
+      number: 14,
+      topic: "AM Defects & Part Integrity",
       points: 1,
       difficulty: "EASY",
-      title: "Bridge Connection in DfAM",
-      description: "What connects the bridges to the body of the part?",
+      title: "Cracks and Part Functionality",
+      description: "Cracks degrade manufactured parts' functionality and cause failure.",
       options: [
-        { id: "A", text: "Glue" },
-        { id: "B", text: "Screws" },
-        { id: "C", text: "Fusion" },
-        { id: "D", text: "Connected at both ends" }
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W08_Q05",
+      number: 15,
+      topic: "Aluminum Matrix Composites",
+      points: 1,
+      difficulty: "EASY",
+      title: "Al Matrix Composites for Improved Mechanical Properties",
+      description: "Which type of Al matrix composites improves Al alloy mechanical properties?",
+      options: [
+        { id: "A", text: "TiB2" },
+        { id: "B", text: "Al-Si-10Mg" },
+        { id: "C", text: "LPBF" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W08_Q06",
+      number: 16,
+      topic: "Metal-Matrix Interfaces",
+      points: 1,
+      difficulty: "EASY",
+      title: "SiC-Al Matrix Interface Effects",
+      description: "What does inadequate SiC-Al matrix interface hinder?",
+      options: [
+        { id: "A", text: "In-situ reaction" },
+        { id: "B", text: "Composite density" },
+        { id: "C", text: "Wettability" },
+        { id: "D", text: "Microstructure alteration" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W08_Q07",
+      number: 17,
+      topic: "Composite Powder Preparation",
+      points: 1,
+      difficulty: "EASY",
+      title: "Mixing Matrix Powder and Reinforcements",
+      description: "What method is used to mix both the matrix powder and reinforcing ingredients at the beginning of composite manufacture?",
+      options: [
+        { id: "A", text: "Ball milling" },
+        { id: "B", text: "Grinding" },
+        { id: "C", text: "Melting" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W08_Q08",
+      number: 18,
+      topic: "Fluid Dynamics in Melt Pool",
+      points: 1,
+      difficulty: "EASY",
+      title: "Dispersion of Reinforcements in Liquid Flow",
+      description: "Which factor affects the dispersion of reinforcements in the liquid flow?",
+      options: [
+        { id: "A", text: "Gravity" },
+        { id: "B", text: "Buoyancy" },
+        { id: "C", text: "Surface tension" },
+        { id: "D", text: "Liquid flow velocity" }
       ],
       correct_option_id: "D"
     },
     {
-      id: "MAM_W06_Q10",
-      number: 60,
-      topic: "Part Consolidation & Integrated Structures",
+      id: "MAM_W08_Q09",
+      number: 19,
+      topic: "Marangoni Convection & Particle Aggregation",
       points: 1,
       difficulty: "EASY",
-      title: "Integrated Structure Part Consolidation",
-      description: "‘Integrated Structure’ design improves performance by reducing __________ parts and merging them into one.",
+      title: "TiC Particle Aggregation in Marangoni Flow",
+      description: "What causes the TiC particles to aggregate near the center of the Marangoni flow?",
+      options: [
+        { id: "A", text: "Centrifugal force" },
+        { id: "B", text: "Torque" },
+        { id: "C", text: "Magnetic field" },
+        { id: "D", text: "Gravitational force" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W08_Q10",
+      number: 20,
+      topic: "Wear Resistance in Composites",
+      points: 1,
+      difficulty: "EASY",
+      title: "Wear Resistance in Coarse TiC Composites",
+      description: "Which factor contributes to poor wear resistance in composites reinforced with coarse TiC components?",
+      options: [
+        { id: "A", text: "Shear stress" },
+        { id: "B", text: "Tensile stress" },
+        { id: "C", text: "Compressive stress" },
+        { id: "D", text: "Abrasive stress" }
+      ],
+      correct_option_id: "A"
+    },
+
+    // =========================================================================
+    // QUESTION PAPER 3: ASSIGNMENT WEEK-09 (2026)
+    // =========================================================================
+    {
+      id: "MAM_W09_Q01",
+      number: 21,
+      topic: "Reverse Engineering & CAD",
+      points: 1,
+      difficulty: "EASY",
+      title: "Digital Models from CAD Drawings",
+      description: "Digital models obtained from CAD drawings are crucial for ________.",
+      options: [
+        { id: "A", text: "obsolete computer parts" },
+        { id: "B", text: "identifying components" },
+        { id: "C", text: "understanding design intent" },
+        { id: "D", text: "photographing circuit boards" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W09_Q02",
+      number: 22,
+      topic: "3D Scanning & Image Alignment",
+      points: 1,
+      difficulty: "EASY",
+      title: "Purpose of Alignment in Range Imaging",
+      description: "What is the purpose of alignment in the context described?",
+      options: [
+        { id: "A", text: "To adjust the scanner's settings" },
+        { id: "B", text: "To bring Range Images to the same reference system" },
+        { id: "C", text: "To calibrate the scanner's lenses" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W09_Q03",
+      number: 23,
+      topic: "Reverse Engineering Fundamentals",
+      points: 1,
+      difficulty: "EASY",
+      title: "Primary Focus of Reverse Engineering",
+      description: "What is the primary focus of reverse engineering?",
+      options: [
+        { id: "A", text: "Investigating natural phenomena" },
+        { id: "B", text: "Designing new technologies" },
+        { id: "C", text: "Extracting design blueprints from man-made objects" },
+        { id: "D", text: "Analyzing scientific theories" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W09_Q04",
+      number: 24,
+      topic: "3D Surface Scanning Techniques",
+      points: 1,
+      difficulty: "EASY",
+      title: "Impeller Surface Scanning Method",
+      description: "How were the surfaces of the impeller scanned?",
+      options: [
+        { id: "A", text: "Simultaneously" },
+        { id: "B", text: "Separately, with each surface scanned individually" },
+        { id: "C", text: "Manually" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W09_Q05",
+      number: 25,
+      topic: "Component Design Origins",
+      points: 1,
+      difficulty: "EASY",
+      title: "Origin of New Component Designs",
+      description: "The design of a new component often originates from:",
+      options: [
+        { id: "A", text: "Conceptual sketches" },
+        { id: "B", text: "Existing physical real parts" },
+        { id: "C", text: "Digital simulations" },
+        { id: "D", text: "Market research" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W09_Q06",
+      number: 26,
+      topic: "Reverse Engineering Analysis",
+      points: 1,
+      difficulty: "EASY",
+      title: "Design Understanding through Component Measurement",
+      description: "The team measures capacitors and resistors as they remove them to grasp the design's ____________.",
+      options: [
+        { id: "A", text: "complexity" },
+        { id: "B", text: "engineering" },
+        { id: "C", text: "color scheme" },
+        { id: "D", text: "material composition" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W09_Q07",
+      number: 27,
+      topic: "Non-Contact Scanning Methods",
+      points: 1,
+      difficulty: "EASY",
+      title: "Non-Contact Reverse Engineering Capture",
+      description: "In non-contact reverse engineering, ________ are captured by projecting energy sources on an object.",
+      options: [
+        { id: "A", text: "3D models" },
+        { id: "B", text: "2D cross-sectional images" },
+        { id: "C", text: "CAD drawings" },
+        { id: "D", text: "virtual reality simulations" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W09_Q08",
+      number: 28,
+      topic: "Point Cloud Data Processing",
+      points: 1,
+      difficulty: "EASY",
+      title: "Point Cloud Processing Actions",
+      description: "What happens during the processing of the points cloud?",
+      options: [
+        { id: "A", text: "Noise and outlines are enhanced" },
+        { id: "B", text: "Points cloud from different places are separated" },
+        { id: "C", text: "Noise and outlines are removed, and points may be combined if the part was scanned in more than one place" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "C"
+    },
+
+    // =========================================================================
+    // QUESTION PAPER 4: ASSIGNMENT WEEK-10 (2026)
+    // =========================================================================
+    {
+      id: "MAM_W10_Q01",
+      number: 29,
+      topic: "Non-Destructive Testing (NDT)",
+      points: 1,
+      difficulty: "EASY",
+      title: "Permanent Record in Inspection Methods",
+      description: "No permanent record is available unless one of the more sophisticated _________ and data collection systems is used.",
+      options: [
+        { id: "A", text: "testing techniques" },
+        { id: "B", text: "inspection methods" },
+        { id: "C", text: "analysis procedures" },
+        { id: "D", text: "evaluation systems" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W10_Q02",
+      number: 30,
+      topic: "Acoustic Emission Testing",
+      points: 1,
+      difficulty: "EASY",
+      title: "Acoustic Emission Wave Generation",
+      description: "What does the term ‘acoustic emission’ refer to?",
+      options: [
+        { id: "A", text: "Generation of static waves" },
+        { id: "B", text: "Generation of transient waves" },
+        { id: "C", text: "Generation of continuous waves" },
+        { id: "D", text: "Generation of seismic waves" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W10_Q03",
+      number: 31,
+      topic: "Ultrasonic NDT",
+      points: 1,
+      difficulty: "EASY",
+      title: "Pulse Vibration Frequency in Ultrasonic Testing",
+      description: "In what frequency range does the pulse vibrate in ultrasonic testing, in general?",
+      options: [
+        { id: "A", text: "1 Hz to 6 Hz" },
+        { id: "B", text: "1 kHz to 6 kHz" },
+        { id: "C", text: "1 MHz to 6 MHz" },
+        { id: "D", text: "1 GHz to 6 GHz" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W10_Q04",
+      number: 32,
+      topic: "Computed Tomography (CT)",
+      points: 1,
+      difficulty: "EASY",
+      title: "Operating Beam Principle in Computed Tomography",
+      description: "Computed Tomography (CT) works on the principle of irradiating a sample with a beam of:",
+      options: [
+        { id: "A", text: "Electromagnetic waves" },
+        { id: "B", text: "Gamma rays" },
+        { id: "C", text: "X-rays" },
+        { id: "D", text: "Ultraviolet rays" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W10_Q05",
+      number: 33,
+      topic: "In-Service NDT Inspection",
+      points: 1,
+      difficulty: "EASY",
+      title: "Primary Reason for In-Service NDT",
+      description: "In-service, NDT inspections are primarily conducted for which of the following reasons?",
+      options: [
+        { id: "A", text: "To ensure products have defects" },
+        { id: "B", text: "To decrease public safety" },
+        { id: "C", text: "To ensure products remain useful and safe" },
+        { id: "D", text: "To neglect product integrity" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W10_Q06",
+      number: 34,
+      topic: "Visual Testing (VT) Techniques",
+      points: 1,
+      difficulty: "EASY",
+      title: "Enhancing Visual Testing Effectiveness",
+      description: "How can Visual Testing (VT) be somewhat improved to enhance its effectiveness and scope?",
+      options: [
+        { id: "A", text: "Using magnetic particle testing" },
+        { id: "B", text: "Employing ultrasonic testing" },
+        { id: "C", text: "Utilizing a boroscope" },
+        { id: "D", text: "Applying radiographic testing" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W10_Q07",
+      number: 35,
+      topic: "Eddy Current Testing",
+      points: 1,
+      difficulty: "EASY",
+      title: "Eddy Current Generation in Conductive Media",
+      description: "Eddy currents can be produced in any electrically conducting __________.",
       options: [
         { id: "A", text: "material" },
-        { id: "B", text: "joint" },
-        { id: "C", text: "design" },
-        { id: "D", text: "unit" }
+        { id: "B", text: "wire only" },
+        { id: "C", text: "plate only" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W10_Q08",
+      number: 36,
+      topic: "CT Image Reconstruction",
+      points: 1,
+      difficulty: "EASY",
+      title: "Multiplanar Reformatted Imaging in CT",
+      description: "Multiplanar reformatted imaging is possible in CT due to multiple contiguous or single _______ scans.",
+      options: [
+        { id: "A", text: "axial" },
+        { id: "B", text: "lateral" },
+        { id: "C", text: "helical" },
+        { id: "D", text: "circular" }
+      ],
+      correct_option_id: "C"
+    },
+
+    // =========================================================================
+    // QUESTION PAPER 5: ASSIGNMENT WEEK-11 (2026)
+    // =========================================================================
+    {
+      id: "MAM_W11_Q01",
+      number: 37,
+      topic: "Eco-Design & Sustainable AM",
+      points: 1,
+      difficulty: "EASY",
+      title: "Eco-Design Material Selection",
+      description: "Eco-design displays itself in real-world applications using ___________ materials throughout the manufacture.",
+      options: [
+        { id: "A", text: "high-impact" },
+        { id: "B", text: "traditional" },
+        { id: "C", text: "low-impact" },
+        { id: "D", text: "synthetic" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W11_Q02",
+      number: 38,
+      topic: "SLM Applications & Consumer Products",
+      points: 1,
+      difficulty: "EASY",
+      title: "Manufacturing Technique for Titanium Bottle Opener",
+      description: "Which manufacturing technique was utilized to produce the titanium bottle opener?",
+      options: [
+        { id: "A", text: "CNC machining" },
+        { id: "B", text: "Injection molding" },
+        { id: "C", text: "Selective laser melting" },
+        { id: "D", text: "Metal casting" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W11_Q03",
+      number: 39,
+      topic: "Sustainable Design Philosophy",
+      points: 1,
+      difficulty: "EASY",
+      title: "Well-Designed Objects & Sustainability",
+      description: "A well-designed object is less sustainable and holds less value.",
+      options: [
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W11_Q04",
+      number: 40,
+      topic: "Functional Specifications in Product Design",
+      points: 1,
+      difficulty: "EASY",
+      title: "Functional Specifications Scope",
+      description: "What do functional specifications define?",
+      options: [
+        { id: "A", text: "The project budgets" },
+        { id: "B", text: "The product’s overall functions and input/output qualities" },
+        { id: "C", text: "The marketing strategy" },
+        { id: "D", text: "The team members roles" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W11_Q05",
+      number: 41,
+      topic: "Raw Material Efficiency in Manufacturing",
+      points: 1,
+      difficulty: "EASY",
+      title: "Lowest Raw Material Wastage Manufacturing",
+      description: "Which manufacturing process has the capability of producing components with the lowest amount of raw material wastage?",
+      options: [
+        { id: "A", text: "Subtractive manufacturing" },
+        { id: "B", text: "Traditional manufacturing" },
+        { id: "C", text: "Additive manufacturing" },
+        { id: "D", text: "All of these" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W11_Q06",
+      number: 42,
+      topic: "Circular Economy in AM",
+      points: 1,
+      difficulty: "EASY",
+      title: "Technology Enabling Circular Business Models",
+      description: "Which of the following technologies plays a crucial role in enabling circular business models?",
+      options: [
+        { id: "A", text: "Virtual Reality" },
+        { id: "B", text: "3D Printing" },
+        { id: "C", text: "Blockchain" },
+        { id: "D", text: "All of these" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W11_Q07",
+      number: 43,
+      topic: "Aerospace AM & Emissions Reduction",
+      points: 1,
+      difficulty: "EASY",
+      title: "Aircraft Light-Weighting Emission Reduction",
+      description: "Lighter parts in aircraft boost fuel efficiency and minimize __________ emissions",
+      options: [
+        { id: "A", text: "nitrogen" },
+        { id: "B", text: "carbon" },
+        { id: "C", text: "oxygen" },
+        { id: "D", text: "hydrogen" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W11_Q08",
+      number: 44,
+      topic: "Topology Optimization & Material Elimination",
+      points: 1,
+      difficulty: "EASY",
+      title: "Action when Relative Density Falls Below Threshold",
+      description: "Which action is taken when the relative density of a material falls below the specified threshold?",
+      options: [
+        { id: "A", text: "Material is strengthened" },
+        { id: "B", text: "Material is eliminated" },
+        { id: "C", text: "Material is hardened" },
+        { id: "D", text: "Material is softened" }
+      ],
+      correct_option_id: "B"
+    },
+
+    // =========================================================================
+    // QUESTION PAPER 6: ASSIGNMENT WEEK-12 (2026)
+    // =========================================================================
+    {
+      id: "MAM_W12_Q01",
+      number: 45,
+      topic: "Production Components & Economic Factors",
+      points: 1,
+      difficulty: "EASY",
+      title: "Basic Production Components",
+      description: "Which of the following are the basic production components?",
+      options: [
+        { id: "A", text: "Land and labor" },
+        { id: "B", text: "Human capital" },
+        { id: "C", text: "Time, entrepreneurship" },
+        { id: "D", text: "All of these" }
+      ],
+      correct_option_id: "D"
+    },
+    {
+      id: "MAM_W12_Q02",
+      number: 46,
+      topic: "Operations & Value Creation",
+      points: 1,
+      difficulty: "EASY",
+      title: "Translating Resources into Products and Services",
+      description: "The company must also translate resources into products and services.",
+      options: [
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W12_Q03",
+      number: 47,
+      topic: "Health, Safety & Environmental Factors in AM",
+      points: 1,
+      difficulty: "EASY",
+      title: "Byproduct Gas in Metal AM Exposure",
+      description: "________ is produced when metal additive manufacturing methods are exposed.",
+      options: [
+        { id: "A", text: "Hydrogen" },
+        { id: "B", text: "Nitrogen" },
+        { id: "C", text: "Ozone" },
+        { id: "D", text: "Carbon dioxide" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W12_Q04",
+      number: 48,
+      topic: "Manufacturing Controllability & Agility",
+      points: 1,
+      difficulty: "EASY",
+      title: "Controllability in Manufacturing Systems",
+      description: "Controllability involves adjusting to changing situations with minimal:",
+      options: [
+        { id: "A", text: "Time and Expenses" },
+        { id: "B", text: "Performance implications" },
+        { id: "C", text: "Both of these" },
+        { id: "D", text: "None of these" }
+      ],
+      correct_option_id: "C"
+    },
+    {
+      id: "MAM_W12_Q05",
+      number: 49,
+      topic: "Laser Safety Standards",
+      points: 1,
+      difficulty: "EASY",
+      title: "ANSI Standard for Safe Use of Lasers",
+      description: "Which ANSI standard provides the direction for safe use of lasers across various sectors such as industry, military, research and higher education?",
+      options: [
+        { id: "A", text: "ANSI Z136.4" },
+        { id: "B", text: "ANSI Z136.1" },
+        { id: "C", text: "ANSI Z136.5" },
+        { id: "D", text: "ANSI Z136.9" }
+      ],
+      correct_option_id: "B"
+    },
+    {
+      id: "MAM_W12_Q06",
+      number: 50,
+      topic: "Operations Management Scope",
+      points: 1,
+      difficulty: "EASY",
+      title: "Demand Planning and Operations",
+      description: "Demand planning, forecasting and inventory are all part of operations.",
+      options: [
+        { id: "A", text: "True" },
+        { id: "B", text: "False" }
+      ],
+      correct_option_id: "A"
+    },
+    {
+      id: "MAM_W12_Q07",
+      number: 51,
+      topic: "Occupational Health & Metal Exposure",
+      points: 1,
+      difficulty: "EASY",
+      title: "Symptoms of Metal Fume Fever",
+      description: "Which is not a symptom of metal fume fever?",
+      options: [
+        { id: "A", text: "Metallic taste on the mouth" },
+        { id: "B", text: "Chills" },
+        { id: "C", text: "Fever" },
+        { id: "D", text: "Dizziness" }
+      ],
+      correct_option_id: "D"
+    },
+    {
+      id: "MAM_W12_Q08",
+      number: 52,
+      topic: "Industrial Revolutions & Manufacturing Evolution",
+      points: 1,
+      difficulty: "EASY",
+      title: "Industrial Revolutions & Technological Foundations",
+      description: "_________is/was based on internal combustion engines and electrical devices to manufacture products.",
+      options: [
+        { id: "A", text: "Industry 1.0" },
+        { id: "B", text: "Industry 2.0" },
+        { id: "C", text: "Industry 3.0" },
+        { id: "D", text: "Industry 4.0" }
       ],
       correct_option_id: "B"
     }

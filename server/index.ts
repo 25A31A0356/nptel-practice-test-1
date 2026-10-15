@@ -52,7 +52,7 @@ async function startServer() {
     }
 
     console.log(`===================================================================`);
-    console.log(`🎓 NPTEL PRACTICE TEST 1: METAL ADDITIVE MANUFACTURING`);
+    console.log(`🎓 NPTEL PRACTICE TEST 2: METAL ADDITIVE MANUFACTURING`);
     console.log(`===================================================================`);
     console.log(`- Local Host (This PC): http://localhost:${port}/`);
     console.log(`- Host Admin Console:   http://localhost:${port}/host (Passkey: 738637)`);

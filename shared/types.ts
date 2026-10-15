@@ -96,6 +96,13 @@ export interface AuditLog {
     | "ATTEMPT_RESET"
     | "RESULTS_RELEASED"
     | "RESULTS_LOCKED"
+    | "REGISTRATION_REMOVED"
+    | "FULLSCREEN_EXIT"
+    | "AI_SIDEBAR_BLUR"
+    | "NETWORK_OFFLINE"
+    | "NETWORK_RECONNECT"
+    | "NETWORK_WARNING"
+    | "DATABASE_PURGED"
     | "CONTEST_STATUS_CHANGED";
   roll_number?: string;
   attempt_id?: string;
